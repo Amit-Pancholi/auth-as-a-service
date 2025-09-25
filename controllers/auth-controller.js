@@ -1,13 +1,28 @@
 const { check, validationResult } = require("express-validator");
 const { PrismaClient } = require("@prisma/client");
-const prisma = PrismaClient();
+const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const User = require("../models/user-model");
 const JWT_CLIENT_SECRET = process.env.JWT_CLIENT_SECRET;
 
+/*
+=============DATABASE===========
+==========client================
+id           Int
+first_name   String
+last_name    String
+email        String
+mobile_No    String
+app          String
+password     String
+
+=======Token blacklist=========
+id           Int
+token        String
+*/
+
 // ========== SIGNUP ==========
-exports.postSignUp = (req, res, next) => [
+exports.postSignUp = [
   check("firstName")
     .trim()
     .notEmpty()
@@ -86,7 +101,6 @@ exports.postSignUp = (req, res, next) => [
         return res
           .status(400)
           .json({ status: "failure", Message: "All fields are required" });
-      // continue this after postgras setup
 
       const existUser = await prisma.Client.findUnique({
         where: { email: email },
@@ -105,19 +119,26 @@ exports.postSignUp = (req, res, next) => [
           email: email,
           mobile_No: mobileNumber,
           password: encryptPassword,
+          app: app,
         },
       });
-      const token = jwt.sign({name:firstName+" "+lastName,email:email}, JWT_CLIENT_SECRET);
+      const token = jwt.sign(
+        { firstName: firstName, lastName: lastName, email: email, app: app },
+        JWT_CLIENT_SECRET,
+        { expiresIn: "1d" }
+      );
 
+      // we need to develope the MFA for verifiy email and number(may be)
       return res.status(201).json({
         status: "success",
-        Message:"user created",
+        Message: "user created",
         token: token,
         client: {
-          name:firstName+' '+lastName,
-          email:email,
-          mobile_No:mobileNumber
-        }
+          name: firstName + " " + lastName,
+          email: email,
+          mobile_No: mobileNumber,
+          app: app,
+        },
       });
     } catch (error) {
       return res.status(500).json({
@@ -128,3 +149,120 @@ exports.postSignUp = (req, res, next) => [
     }
   },
 ];
+// =============Login==============
+exports.postLogin = [
+  check("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Please enter email")
+    .isEmail()
+    .withMessage("Please enter a valid email")
+    .normalizeEmail(),
+  check("password").trim().notEmpty().withMessage("Please enter a password"),
+
+  (req, res, next) => {
+    try {
+      const error = validationResult(req);
+      if (!error.isEmpty()) {
+        return res.status(400).json({
+          stauts: "failure",
+          Message: "Validation failed",
+          error: error.array().map((err) => err.msg),
+        });
+      } else {
+        next();
+      }
+    } catch (error) {
+      return res.status(500).json({
+        status: "failure",
+        Message: "bad request",
+        error: error.message,
+      });
+    }
+  },
+  async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password)
+        return res.status(400).json({
+          status: "failure",
+          Message: "all field requried",
+        });
+
+      const user = await prisma.Client.findUnique({
+        where: { email: email },
+      });
+      if (!user)
+        return res.status(404).json({
+          status: "failure",
+          Message: "User not found",
+        });
+
+      const validPassword = await bcrypt.compare(password, user.password);
+
+      if (!validPassword)
+        return res.status(400).json({
+          status: "failure",
+          Message: "user or password is wrong",
+        });
+      console.log(user);
+      const token = jwt.sign(
+        {
+          firstName: user.first_name,
+          lastName: user.last_name,
+          email: user.email,
+          app: user.app,
+        },
+        JWT_CLIENT_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      return res.status(200).json({
+        status: "success",
+        Message: "Client login successfully",
+        token: token,
+        client: {
+          name: user.first_name + " " + user.last_name,
+          email: user.email,
+          app: user.app,
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: "failure",
+        Message: "Error loginning user",
+        error: error.message,
+      });
+    }
+  },
+];
+
+// ===============Logout================
+exports.postLogOut = async (req, res, next) => {
+  try {
+
+    const authHeader = req.headers.authorization;
+    if(!authHeader) return res.status(400).json({
+      status:"failure",
+      Message:"Bad request,Invalid token"
+    })
+    const token = authHeader.split(" ")[1]
+
+    await prisma.Token.create({
+      data:{token:token}
+    })
+
+    return res.status(201).json({
+      status:"success",
+      Message:"logout successfully"
+    })
+
+  } catch (error) {
+    return res.status(500).json({
+      status: "failure",
+      Message: "Error in user logout",
+      error: error.message,
+    });
+  }
+};
