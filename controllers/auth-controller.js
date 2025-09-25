@@ -206,7 +206,6 @@ exports.postLogin = [
           status: "failure",
           Message: "user or password is wrong",
         });
-      console.log(user);
       const token = jwt.sign(
         {
           firstName: user.first_name,
