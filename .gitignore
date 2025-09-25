@@ -2,3 +2,5 @@
 package-lock.json
 
 node_modles/
+
+/generated/prisma
