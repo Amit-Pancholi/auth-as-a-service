@@ -23,7 +23,7 @@ model Client {
   mobile_No  String @unique  // <-- better as String, not Int
   password   String
 }
-model Token {
+model Logout_Token {
   id      Int     @id @default(autoincrement())
   token   String
 }

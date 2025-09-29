@@ -26,7 +26,7 @@ module.exports = async (req, res, next) => {
         Message: "Unauthorized, token missing",
       });
     //   token is blacklist or not
-    const blacklistToken = await prisma.Token.findFirst({
+    const blacklistToken = await prisma.Logout_Token.findFirst({
       where: { token: token },
     });
     if (blacklistToken)

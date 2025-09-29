@@ -85,13 +85,12 @@ email         String
 mobile_No     String
 app           String
 password      String
-=======Token blacklist=========
+=======logout Token=========
 id            Int
 token         String
 ```
 
 ---
-
 ## Contributing
 
 1. Fork the repo  

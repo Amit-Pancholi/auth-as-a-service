@@ -240,23 +240,22 @@ exports.postLogin = [
 // ===============Logout================
 exports.postLogOut = async (req, res, next) => {
   try {
-
     const authHeader = req.headers.authorization;
-    if(!authHeader) return res.status(400).json({
-      status:"failure",
-      Message:"Bad request,Invalid token"
-    })
-    const token = authHeader.split(" ")[1]
+    if (!authHeader)
+      return res.status(400).json({
+        status: "failure",
+        Message: "Bad request,Invalid token",
+      });
+    const token = authHeader.split(" ")[1];
 
-    await prisma.Token.create({
-      data:{token:token}
-    })
+    await prisma.Logout_Token.create({
+      data: { token: token },
+    });
 
     return res.status(201).json({
-      status:"success",
-      Message:"logout successfully"
-    })
-
+      status: "success",
+      Message: "logout successfully",
+    });
   } catch (error) {
     return res.status(500).json({
       status: "failure",
