@@ -242,6 +242,9 @@ exports.deleteTokenByClient = async (req, res, next) => {
         access_token: token,
       },
     });
+    if (!tokenExist)
+      return res.status(404).json(new Response(404, null, "token not exist"));
+
     await prisma.token.delete({
       where: {
         id: tokenExist.id,
@@ -270,6 +273,8 @@ exports.deleteTokenByUser = async (req, res, next) => {
         access_token: token,
       },
     });
+    if (!tokenExist)
+      return res.status(404).json(new Response(404, null, "token not exist"));
     await prisma.token.delete({
       where: {
         id: tokenExist.id,
