@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const pool = require("../utils/db-connection");
 const Response = require("../utils/response-handler");
 const { findInTableById } = require("../utils/db-query");
-console.log(Object.keys(prisma));
+// console.log(Object.keys(prisma));
 // =========Crete Token============
 
 // need to pass user_id client_id app_id
@@ -85,7 +85,7 @@ exports.getToken = async (req, res, next) => {
     FROM token_schema.token t 
     JOIN client_schema."Client" c ON t.client_id=c.id 
     JOIN client_schema."App" a ON t.app_id=a.id;`;
-    // need to join table
+    // need to user join table
 
     const result = await pool.query(query);
     if (result.rows.length === 0)
@@ -128,8 +128,19 @@ exports.getTokenByClient = async (req, res, next) => {
 };
 
 // ===========fileter by app id ==============
+// provide client_id
 exports.getTokenByapp = async (req, res, next) => {
   try {
+    const { client_id } = req.body;
+    const clientExist = await findInTableById(
+      "Client",
+      "client_schema",
+      client_id
+    );
+
+    if (!clientExist)
+      return res.status(400).json(new Response(400, null, "bad request"));
+
     const app_id = req.params.id;
     const appExist = await findInTableById("App", "client_schema", app_id);
 
@@ -139,7 +150,8 @@ exports.getTokenByapp = async (req, res, next) => {
     FROM token_schema.token t 
     JOIN client_schema."Client" c ON t.client_id=c.id 
     JOIN client_schema."App" a ON t.app_id=a.id
-    WHERE a.id=${app_id};`;
+    WHERE a.id=${app_id}
+    WHERE c.id=${client_id};`;
     // add user in join
 
     const result = await pool.query(query);
