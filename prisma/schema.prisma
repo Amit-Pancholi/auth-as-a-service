@@ -18,12 +18,20 @@ model Client {
   id         Int    @id @default(autoincrement())
   first_name String
   last_name  String
-  app        String
   email      String @unique
   mobile_No  String @unique  // <-- better as String, not Int
   password   String
 }
+
 model Logout_Token {
   id      Int     @id @default(autoincrement())
   token   String
+}
+
+model App {
+  id           Int      @id  @default(autoincrement())
+  app_name     String
+  client_id    Int
+  description  String
+  secret       String  @default("empty")
 }

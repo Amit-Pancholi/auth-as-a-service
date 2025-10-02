@@ -56,6 +56,10 @@ exports.postSignUp = [
     .matches(/^[0-9]+$/)
     .withMessage("Please enter a valid mobile number"),
   check("app").trim().notEmpty().withMessage("Please enter app/website name"),
+  check("description").trim()
+  .matches(/^[a-zA-Z\s]+$/).withMessage(
+    "description can only contain letters and spaces"
+  ),
   check("password")
     .trim()
     .notEmpty()
@@ -94,8 +98,15 @@ exports.postSignUp = [
   },
   async (req, res, next) => {
     try {
-      const { firstName, lastName, email, mobileNumber, app, password } =
-        req.body;
+      const {
+        firstName,
+        lastName,
+        email,
+        mobileNumber,
+        app,
+        password,
+        description,
+      } = req.body;
 
       if (!firstName || !email || !mobileNumber || !app || !password)
         return res
@@ -119,7 +130,16 @@ exports.postSignUp = [
           email: email,
           mobile_No: mobileNumber,
           password: encryptPassword,
-          app: app,
+        },
+      });
+      const client = await prisma.Client.findUnique({
+        where: {email:email}
+      })
+      const app_obj = await prisma.App.create({
+        data: {
+          app_name: app,
+          client_id: client.id,
+          description:description
         },
       });
       const token = jwt.sign(
