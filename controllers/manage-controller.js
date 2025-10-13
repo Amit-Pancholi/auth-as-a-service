@@ -1,4 +1,5 @@
 const { check, validationResult } = require("express-validator");
+const { checkClient, checkApp, checkUser } = require("../utils/check-exist");
 const Response = require("../utils/response-handler");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -8,27 +9,9 @@ const { findInTableById } = require("../utils/db-query");
 exports.postDeleteUser = async (req, res, next) => {
   try {
     const { user_id, client_id, app_id } = req.head;
-    const clientExist = await findInTableById(
-      "Client",
-      "client_schema",
-      client_id
-    );
-    if (!clientExist || clientExist.active == false)
-      return res
-        .status(404)
-        .json(new Response(404, null, "Client not found or removed"));
-
-    const appExist = await findInTableById("App", "client_schema", app_id);
-    if (!appExist || appExist.active == false)
-      return res
-        .status(404)
-        .json(new Response(404, null, "App not found or removed"));
-
-    const userExist = await findInTableById("user", "user_schema", user_id);
-    if (!userExist || userExist.active == false)
-      return res
-        .status(404)
-        .json(new Response(404, null, "User not found or removed"));
+    const clientExist = await checkClient(client_id, res);
+    const appExist = await checkApp(app_id, res);
+    const userExist = await checkUser(user_id, res);
 
     await prisma.user.update({
       where: {
@@ -92,27 +75,10 @@ exports.postUpdateUser = [
   async (req, res, next) => {
     try {
       const { user_id, client_id, app_id } = req.head;
-      const clientExist = await findInTableById(
-        "Client",
-        "client_schema",
-        client_id
-      );
-      if (!clientExist || clientExist.active == false)
-        return res
-          .status(404)
-          .json(new Response(404, null, "Client not found or removed"));
 
-      const appExist = await findInTableById("App", "client_schema", app_id);
-      if (!appExist || appExist.active == false)
-        return res
-          .status(404)
-          .json(new Response(404, null, "App not found or removed"));
-
-      const userExist = await findInTableById("user", "user_schema", user_id);
-      if (!userExist || userExist.active == false)
-        return res
-          .status(404)
-          .json(new Response(404, null, "User not found or removed"));
+      const clientExist = await checkClient(client_id, res);
+      const appExist = await checkApp(app_id, res);
+      const userExist = await checkUser(user_id, res);
 
       const { first_name, last_namee, password } = req.body;
       let user;
@@ -137,7 +103,9 @@ exports.postUpdateUser = [
           },
         });
       }
-      return res.status(200).json(new Response(200,null,"user update successfully"))
+      return res
+        .status(200)
+        .json(new Response(200, null, "user update successfully"));
     } catch (err) {
       return res.status(500).json({
         status: "failure",
@@ -147,3 +115,76 @@ exports.postUpdateUser = [
     }
   },
 ];
+
+// adding and removing user from blacklist by client
+// user id and client id will send through res head and also check user is block or not through middlewar
+exports.postBanUser = async (req, res, next) => {
+  try {
+    const { user_id, client_id, app_id } = req.head;
+    const clientExist = await checkClient(client_id, res);
+    const appExist = await checkApp(app_id, res);
+    const userExist = await checkUser(user_id, res);
+
+    const userBan = await prisma.user_blacklist.findFirst({
+      where: {
+        user_id,
+        app_id,
+      },
+    });
+    if (userBan)
+      return res
+        .status(400)
+        .json(new Response(400, null, "user already in blacklist"));
+
+    await prisma.user_blacklist.create({
+      data: {
+        user_id,
+        app_id,
+      },
+    });
+
+    return res
+      .status(201)
+      .json(new Response(201, null, "user add to blacklist"));
+  } catch (err) {
+    return res.status(500).json({
+      status: "failure",
+      Message: "Error processing blacklist operation",
+      error: err.message,
+    });
+  }
+};
+
+exports.removeUserFromBlacklist = async (req, res, next) => {
+  try {
+    const { user_id, client_id, app_id } = req.head;
+    const clientExist = await checkClient(client_id, res);
+    const appExist = await checkApp(app_id, res);
+    const userExist = await checkUser(user_id, res);
+    const userBan = await prisma.user_blacklist.findFirst({
+      where: {
+        user_id,
+        app_id,
+      },
+    });
+    if (!userBan)
+      return res
+        .status(400)
+        .json(new Response(400, null, "user not in blacklist"));
+
+    await prisma.user_blacklist.delete({
+        where:{
+            id : userBan.id
+        }
+    })
+    
+    return res.status(200).json(new Response(200,null,"user removed from blacklist"))
+
+  } catch (err) {
+    return res.status(500).json({
+      status: "failure",
+      Message: "Error processing blacklist operation",
+      error: err.message,
+    });
+  }
+};
