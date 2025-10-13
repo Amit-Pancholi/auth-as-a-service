@@ -36,7 +36,7 @@ exports.postSignUp = [
   check("lastName")
     .trim()
     .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("First name can only contain letters and spaces"),
+    .withMessage("Last name can only contain letters and spaces"),
   check("email")
     .trim()
     .notEmpty()

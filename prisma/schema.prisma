@@ -21,6 +21,7 @@ model Client {
   email      String @unique
   mobile_No  String @unique  // <-- better as String, not Int
   password   String
+  active     Boolean @default(true)
 }
 
 model Logout_Token {
@@ -34,4 +35,5 @@ model App {
   client_id    Int
   description  String
   secret       String  @default("empty")
+  active     Boolean @default(true)
 }
