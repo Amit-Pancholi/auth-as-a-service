@@ -1,6 +1,9 @@
 const Response = require("./response-handler");
 const { findInTableById } = require("./db-query");
 
+// return if function result is empty
+// example if (!clientExist || !appExist || !userExist) return;
+
 /**
  * Check if a client exists and is active
  */

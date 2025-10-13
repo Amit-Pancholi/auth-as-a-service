@@ -12,6 +12,8 @@ exports.postDeleteUser = async (req, res, next) => {
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
+    if (!clientExist || !appExist || !userExist) return;
+
 
     await prisma.user.update({
       where: {
@@ -79,6 +81,8 @@ exports.postUpdateUser = [
       const clientExist = await checkClient(client_id, res);
       const appExist = await checkApp(app_id, res);
       const userExist = await checkUser(user_id, res);
+      if (!clientExist || !appExist || !userExist) return;
+
 
       const { first_name, last_namee, password } = req.body;
       let user;
@@ -124,6 +128,7 @@ exports.postBanUser = async (req, res, next) => {
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
+if (!clientExist || !appExist || !userExist) return;
 
     const userBan = await prisma.user_blacklist.findFirst({
       where: {
@@ -161,6 +166,9 @@ exports.removeUserFromBlacklist = async (req, res, next) => {
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
+
+    if (!clientExist || !appExist || !userExist) return;
+
     const userBan = await prisma.user_blacklist.findFirst({
       where: {
         user_id,
