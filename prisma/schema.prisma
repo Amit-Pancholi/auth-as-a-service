@@ -29,6 +29,6 @@ model user {
 
 model user_blacklist {
   id          Int      @id @default(autoincrement())
-  user_id     String
-  app_id      String
+  user_id     Int
+  app_id      Int
 }
