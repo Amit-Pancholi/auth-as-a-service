@@ -222,6 +222,7 @@ exports.postLogin = [
   },
 ];
 // improve it later
+// we will remove token from token service database or set that token into blacklist 
 exports.postLogOut = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;

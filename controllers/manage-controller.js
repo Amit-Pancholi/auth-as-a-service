@@ -303,13 +303,20 @@ exports.getBanUser = async (req, res, next) => {
   } catch (err) {
     return res.status(500).json({
       status: "failure",
-      Message: "Error getting inactive user",
+      Message: "Error getting banned user",
       error: err.message,
     });
   }
 };
 
 // helper functions
+
+/**
+ * 
+ * @param client_id it will a int that will define for client id
+ * @param status it will a bool that will define for active user or not 
+ * @returns we will return a array of users that active,not or both
+ */
 async function fetchUsersByStatus(client_id,status = null) {
   let whereClause = "";
   if (status === true) whereClause = "WHERE u.active=true";
