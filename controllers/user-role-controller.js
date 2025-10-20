@@ -239,3 +239,48 @@ exports.deleteRoleFromUser = async (req, res, next) => {
     });
   }
 };
+
+// ======= get all user assined with role ===========
+// provide client,app id in head
+
+exports.getAllRoledUser = async (req,res,next) => {
+  try {
+     const { client_id,app_id } = req.head;
+     const clientExist = await checkClient(client_id, res);
+     const appExist = await checkApp(app_id, res);
+
+     if (!clientExist || !appExist) return;
+
+     if (
+       appExist.client_id !== Number(client_id)
+     ) {
+       return res
+         .status(400)
+         .json(
+           new Response(
+             400,
+             null,
+             "app not associated with this client"
+           )
+         );
+     }
+     
+     const query = `SELECT u.first_name,u.last_name,u.email,u.mobile_no,a.app_name,r.name AS role_name
+     FROM user_role ur
+     JOIN role r ON ur.role_id=r.id
+     JOIN user_schema.user u ON u.id=ur.user_id
+     JOIN client_schema."App" a ON a.id=ur.app_id
+     WHERE u.active=true AND r.active=true;`
+
+     const result = await pool.query(query)
+
+     if(result.rows.length == 0) return res.status(200).json(new Response(200,[],"there no data exist to related to role and user"))
+      return res.status(200).json(new Response(200,result.rows,"successfully fetch user and related role"))
+    } catch (err) {
+    return res.status(500).json({
+      status: "failure",
+      Message: "Error role and related user",
+      error: err.message,
+    });
+  }
+}
