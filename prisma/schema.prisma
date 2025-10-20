@@ -29,7 +29,6 @@ model user_role {
   user_id      Int
   app_id       Int
   role_id      Int
-  active       Boolean   @default(true)
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
