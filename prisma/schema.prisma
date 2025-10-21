@@ -15,4 +15,13 @@ model token {
   app_id        Int
   access_token  String
   refresh_token String
+  @@unique([user_id, client_id, app_id])
+}
+
+model client_token {
+  id            Int    @id @default(autoincrement())
+  client_id     Int
+  access_token  String
+  refresh_token String
+  @@unique([client_id])
 }

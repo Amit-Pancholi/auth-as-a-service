@@ -1,22 +1,35 @@
 const express = require("express");
-const manager = require("../controllers/manage-controller");
+const tokenController = require("../controllers/manage-controller");
 const verifiyClient = require("../middlewares/remove-token-by-client-auth");
 const verifyUser = require("../middlewares/user-auth");
 const tokenRout = express.Router();
 
-tokenRout.post("/token/generate", manager.postGenerateToken);
-// whis routes only access by me
-tokenRout.get("/token", manager.getToken);
+// =============== CREATE TOKEN ===============
+tokenRout.post("/user", tokenController.postGenerateTokenForUser);
+tokenRout.post("/client", tokenController.postGenerateTokenForClient);
 
-tokenRout.get("/token/client/:id", manager.getTokenByClient);
-tokenRout.get("/token/app/:id", manager.getTokenByapp);
-// provide refresh token
-tokenRout.put("/token", verifyUser, manager.putUpdateToken);
-// provide access token
-tokenRout.delete(
-  "/token/client/:token",
-  verifiyClient,
-  manager.deleteTokenByClient
-);
-tokenRout.delete("/token/user", verifyUser, manager.deleteTokenByUser);
+// =============== GET TOKEN(S) ===============
+// Get single token for a specific client
+tokenRout.get("/client/:clientId", tokenController.getTokenForClient);
+
+// Get all user tokens (client_id must come from req.head or middleware)
+tokenRout.get("/user", tokenController.getAllUserToken);
+
+// Get tokens filtered by app id (client_id in req.head)
+tokenRout.get("/app/:appId", tokenController.getTokenByapp);
+
+// =============== UPDATE TOKEN ===============
+tokenRout.put("/user", tokenController.putUpdateTokenForUser);
+tokenRout.put("/client", tokenController.putUpdateTokenForClient);
+
+// =============== DELETE TOKEN ===============
+// Delete by access token (used by admin or service)
+tokenRout.delete("/by-client", tokenController.deleteTokenByClient);
+
+// Delete token by user (using req.head.user_id and Authorization header)
+tokenRout.delete("/by-user", tokenController.deleteTokenByUser);
+
+// Delete client token using Authorization header
+tokenRout.delete("/client", tokenController.deleteTokenForClient);
+
 module.exports = tokenRout;
