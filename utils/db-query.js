@@ -9,8 +9,8 @@ const pool = require("./db-connection");
  */
 async function findInTableById(table,schema, id) {
 
-  const query = `SELECT * FROM ${schema}."${table}" WHERE id = $1;`; // table name injected
-  const result = await pool.query(query, [id]);
+  const query = `SELECT * FROM ${schema}."${table}" WHERE id = $1 AND active=$2;`; // table name injected
+  const result = await pool.query(query, [id,true]);
   if(result.rows.length === 0) return {}
   return result.rows[0];
 }

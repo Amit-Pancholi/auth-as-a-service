@@ -1,16 +1,19 @@
-const { check, validationResult } = require("express-validator");
 const { checkClient, checkApp, checkUser } = require("../utils/check-exist");
 const Response = require("../utils/response-handler");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const pool = require("../utils/db-connection");
+// const { query } = require("express-validator");
 
 // ======== add role to user ==============
 // we will provude client,user and app id through req head
 // provide role through url
+// provide app and user id in req body
 exports.postAddRoleToUser = async (req, res, next) => {
   try {
-    const { client_id, user_id, app_id } = req.head;
+    const { client_id } = req.head;
+    // const client_id = 1
+    const { user_id, app_id } = req.body;
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
@@ -51,7 +54,7 @@ exports.postAddRoleToUser = async (req, res, next) => {
         id: Number(role_id),
       },
     });
-    if (!roleExist)
+    if (!roleExist || roleExist.active === false)
       return res
         .status(404)
         .json(new Response(404, null, "role not found or removed"));
@@ -91,12 +94,14 @@ exports.postAddRoleToUser = async (req, res, next) => {
 };
 
 // ========== update user role ===========
-// we will provude client,user and app id through req head
+// we will provude client id through req head
 // provide new role through url
-
+// provide user and app id through body
 exports.postUpdateRole = async (req, res, next) => {
   try {
-    const { client_id, user_id, app_id } = req.head;
+    const { client_id } = req.head;
+    // const client_id = 1;
+    const { user_id, app_id } = req.body;
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
@@ -131,12 +136,16 @@ exports.postUpdateRole = async (req, res, next) => {
         );
 
     const role_id = req.params.roleId;
+    if (role_id == assinedRole.id)
+      return res
+        .status(200)
+        .json(new Response(200, null, "you already assined this role to user"));
     const roleExist = await prisma.role.findUnique({
       where: {
         id: Number(role_id),
       },
     });
-    if (!roleExist)
+    if (!roleExist || roleExist.active === false)
       return res
         .status(404)
         .json(new Response(404, null, "role not found or removed"));
@@ -177,30 +186,20 @@ exports.postUpdateRole = async (req, res, next) => {
 };
 
 //======== removed role from user =========
-// we will provude client,user and app id through req head
+// we will provude client id through req head
+// user role id through url
 exports.deleteRoleFromUser = async (req, res, next) => {
   try {
-    const { client_id, user_id, app_id } = req.head;
+    const { client_id} = req.head;
+    // const client_id = 1;
     const clientExist = await checkClient(client_id, res);
-    const appExist = await checkApp(app_id, res);
-    const userExist = await checkUser(user_id, res);
 
-    if (!clientExist || !userExist || !appExist) return;
+    if (!clientExist) return;
 
-    if (
-      userExist.app_id !== Number(app_id) ||
-      appExist.client_id !== Number(client_id)
-    ) {
-      return res
-        .status(400)
-        .json(
-          new Response(400, null, "User not associated with this client or app")
-        );
-    }
-    const assinedRole = await prisma.user_role.findFirst({
+    const user_role_id = req.params.URId;
+    const assinedRole = await prisma.user_role.findUnique({
       where: {
-        user_id: Number(user_id),
-        app_id: Number(app_id),
+        id: Number(user_role_id)
       },
     });
     if (!assinedRole)
@@ -213,11 +212,6 @@ exports.deleteRoleFromUser = async (req, res, next) => {
             "User does not have any assigned role (defaults to guest)"
           )
         );
-    if (assinedRole.app_id !== Number(app_id)) {
-      return res
-        .status(400)
-        .json(new Response(400, null, "Role not related to this app"));
-    }
 
     const removeRole = await prisma.user_role.delete({
       where: {
@@ -241,46 +235,145 @@ exports.deleteRoleFromUser = async (req, res, next) => {
 };
 
 // ======= get all user assined with role ===========
-// provide client,app id in head
+// provide client id in head
 
-exports.getAllRoledUser = async (req,res,next) => {
+exports.getAllRoledUser = async (req, res, next) => {
   try {
-     const { client_id,app_id } = req.head;
-     const clientExist = await checkClient(client_id, res);
-     const appExist = await checkApp(app_id, res);
+    const { client_id} = req.head;
+    // const client_id = 1;
+    const clientExist = await checkClient(client_id, res);
 
-     if (!clientExist || !appExist) return;
+    if (!clientExist) return;
 
-     if (
-       appExist.client_id !== Number(client_id)
-     ) {
-       return res
-         .status(400)
-         .json(
-           new Response(
-             400,
-             null,
-             "app not associated with this client"
-           )
-         );
-     }
-     
-     const query = `SELECT u.first_name,u.last_name,u.email,u.mobile_no,a.app_name,r.name AS role_name
-     FROM user_role ur
-     JOIN role r ON ur.role_id=r.id
+    const query = `SELECT ur.id AS user_role_id,u.first_name,u.last_name,u.email,u.mobile_no,a.app_name,r.name AS role
+     FROM rbac_schema.user_role ur
+     JOIN rbac_schema.role r ON ur.role_id=r.id
      JOIN user_schema.user u ON u.id=ur.user_id
      JOIN client_schema."App" a ON a.id=ur.app_id
-     WHERE u.active=true AND r.active=true;`
+     WHERE u.active=true AND r.active=true AND a.client_id=$1;`;
 
-     const result = await pool.query(query)
+    const result = await pool.query(query, [client_id]);
 
-     if(result.rows.length == 0) return res.status(200).json(new Response(200,[],"there no data exist to related to role and user"))
-      return res.status(200).json(new Response(200,result.rows,"successfully fetch user and related role"))
-    } catch (err) {
+    if (result.rows.length == 0)
+      return res
+        .status(200)
+        .json(
+          new Response(
+            200,
+            [],
+            "there no data exist to related to role and user"
+          )
+        );
+    return res
+      .status(200)
+      .json(
+        new Response(
+          200,
+          result.rows,
+          "successfully fetch user and related role"
+        )
+      );
+  } catch (err) {
     return res.status(500).json({
       status: "failure",
       Message: "Error role and related user",
       error: err.message,
     });
   }
-}
+};
+
+// ============ get  user assined with role according to app ===================
+
+// provide client id in head
+//  app id in url
+exports.getAllRoledUsersByApp = async (req, res, next) => {
+  try {
+    const { client_id} = req.head;
+    // const client_id = 1
+    const  app_id  = req.params.appId;
+    console.log(app_id)
+    const clientExist = await checkClient(client_id, res);
+    const appExist = await checkApp(app_id, res);
+
+    if (!clientExist || !appExist) return;
+
+    if (appExist.client_id !== Number(client_id)) {
+      return res
+        .status(400)
+        .json(new Response(400, null, "app not associated with this client"));
+    }
+
+    const query = `SELECT ur.id AS user_role_id,u.first_name,u.last_name,u.email,u.mobile_no,a.app_name,r.name AS role_name
+     FROM rbac_schema.user_role ur
+     JOIN rbac_schema.role r ON ur.role_id=r.id
+     JOIN user_schema.user u ON u.id=ur.user_id
+     JOIN client_schema."App" a ON a.id=ur.app_id
+     WHERE u.active=true AND r.active=true AND a.client_id=$1 AND a.id=$2;`;
+
+    const result = await pool.query(query, [client_id, app_id]);
+
+    if (result.rows.length == 0)
+      return res
+        .status(200)
+        .json(
+          new Response(
+            200,
+            [],
+            "there no data exist to related to role and user"
+          )
+        );
+    return res
+      .status(200)
+      .json(
+        new Response(
+          200,
+          result.rows,
+          "successfully fetch user and related role"
+        )
+      );
+  } catch (err) {
+    return res.status(500).json({
+      status: "failure",
+      Message: "Error fetching role and related user",
+      error: err.message,
+    });
+  }
+};
+
+// ========== get user role for single user ===============
+// this will only call by internal service for getting role
+// provide userId through url
+exports.getSingleUserRole = async (req, res, next) => {
+  try {
+    const user_id = req.params.userId;
+    const userExist = await checkUser(user_id, res);
+    if (!userExist) return;
+
+    const appExist = await checkApp(userExist.app_id,res);
+
+    if(!appExist) return;
+
+    const query = `SELECT ur.id AS user_role_id,r.name AS user_role
+    FROM role r
+    JOIN user_role ur ON ur.role_id=r.id
+    WHERE ur.user_id=$1;`;
+
+    const result = await pool.query(query, [user_id]);
+    if (result.rows.length === 0)
+      return res
+        .status(200)
+        .json(new Response(200, {}, "there is no role assined to this user"));
+
+    return res
+      .status(200)
+      .json(
+        new Response(200, result.rows[0], "role fetch successfully for user")
+      );
+  } catch (err) {
+    return res.status(500).json({
+      status: "failure",
+      Message: "Error role and related user",
+      error: err.message,
+    });
+  }
+};

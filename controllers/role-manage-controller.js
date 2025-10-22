@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 const pool = require("../utils/db-connection");
 
 // =========== role creating =========
-// provide client id and app id in req head
+// provide client idin req head
+// app id through url
 exports.postCreateRole = [
   check("name")
     .trim()
@@ -33,7 +34,9 @@ exports.postCreateRole = [
   },
   async (req, res, next) => {
     try {
-      const { client_id, app_id } = req.head;
+      const { client_id } = req.head;
+      // const client_id = 1;
+      const app_id = req.params.id;
       const clientExist = await checkClient(client_id, res);
       const appExist = await checkApp(app_id, res);
 
@@ -49,7 +52,7 @@ exports.postCreateRole = [
         },
       });
 
-      if (existingRole)
+      if (existingRole && existingRole.active === true)
         return res
           .status(400)
           .json(new Response(400, null, "Role already exists"));
@@ -106,11 +109,11 @@ exports.putUpdateRole = [
   },
   async (req, res, next) => {
     try {
-      const { client_id, app_id } = req.head;
+      const { client_id } = req.head;
+      // const client_id = 1;
       const clientExist = await checkClient(client_id, res);
-      const appExist = await checkApp(app_id, res);
 
-      if (!clientExist || !appExist) return;
+      if (!clientExist) return;
       const role_id = req.params.roleId;
 
       const roleExist = await prisma.role.findUnique({
@@ -124,28 +127,40 @@ exports.putUpdateRole = [
           .status(404)
           .json(new Response(404, null, "role not found or removed"));
 
-      if (
-        roleExist.client_id != Number(client_id) ||
-        roleExist.app_id != Number(app_id)
-      )
+      if (roleExist.client_id != Number(client_id))
         return res
           .status(400)
           .json(
             new Response(400, null, "bad request client or role not relate")
           );
 
+      const appExist = await checkApp(roleExist.app_id, res);
+
+      if (!appExist)
+        return res
+          .status(404)
+          .json(new Response(404, null, "App not exist or removed"));
+
+      if (appExist.client_id != client_id)
+        return res
+          .status(400)
+          .json(new Response(400, null, "Client does not relate app or role"));
       const { name, description } = req.body;
 
       const existingRole = await prisma.role.findFirst({
         where: {
           name,
-          app_id: Number(app_id),
+          app_id: roleExist.app_id,
           client_id: Number(client_id),
           active: true,
         },
       });
 
-      if (existingRole)
+      if (
+        existingRole &&
+        existingRole.active === true &&
+        existingRole.id !== Number(role_id)
+      )
         return res
           .status(400)
           .json(new Response(400, null, "Role already exists with this name"));
@@ -174,14 +189,15 @@ exports.putUpdateRole = [
 
 // ======== delete role ============
 // provide role id through url
-//client and app id  in req head
+//client id in req head
 exports.deleteRole = async (req, res, next) => {
   try {
-    const { client_id, app_id } = req.head;
+    const { client_id } = req.head;
+    // const client_id = 1
     const clientExist = await checkClient(client_id, res);
-    const appExist = await checkApp(app_id, res);
+    // const appExist = await checkApp(app_id, res);
 
-    if (!clientExist || !appExist) return;
+    if (!clientExist) return;
 
     const role_id = req.params.roleId;
 
@@ -196,13 +212,22 @@ exports.deleteRole = async (req, res, next) => {
         .status(404)
         .json(new Response(404, null, "role not found or removed"));
 
-    if (
-      roleExist.client_id != Number(client_id) ||
-      roleExist.app_id != Number(app_id)
-    )
+    if (roleExist.client_id != Number(client_id))
       return res
         .status(400)
         .json(new Response(400, null, "bad request client or role not relate"));
+
+    const appExist = await checkApp(roleExist.app_id, res);
+
+    if (!appExist)
+      return res
+        .status(404)
+        .json(new Response(404, null, "App not exist or removed"));
+
+    if (appExist.client_id != client_id)
+      return res
+        .status(400)
+        .json(new Response(400, null, "Client does not relate app or role"));
     const updatedRole = await prisma.role.update({
       where: { id: Number(role_id) },
       data: {
@@ -226,13 +251,14 @@ exports.deleteRole = async (req, res, next) => {
 exports.getAllRole = async (req, res, next) => {
   try {
     const { client_id } = req.head;
+    // const client_id = 1;
     const clientExist = await checkClient(client_id, res);
 
     if (!clientExist) return;
 
     const query = `
     SELECT r.id,r.name,r.description,c.first_name,c.last_name,a.app_name,r."createdAt",r."updatedAt"
-    FROM client_schema."role" r
+    FROM rbac_schema."role" r
     JOIN client_schema."Client" c ON c.id = r.client_id
     JOIN client_schema."App" a ON a.id = r.app_id
     WHERE c.id =$1 AND r.active = true;`;
