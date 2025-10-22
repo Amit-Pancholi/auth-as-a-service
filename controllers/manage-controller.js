@@ -303,7 +303,20 @@ exports.putUpdateTokenForUser = async (req, res, next) => {
       return res
         .status(404)
         .json(new Response(404, null, "there is no token exist"));
+    // ============================================
+    // call rback api for getting role then use that here
+    // call 8003 /role/:userId
+    // then add role field in token
+    // const roleResponse = await fetch(`http://localhost:8003/role/${user_id}`);
+    // const { data: userRole } = await roleResponse.json();
 
+    // const access_token = jwt.sign(
+    //   { user_id, client_id, app_id, role: userRole?.name || "guest" },
+    //   appExist.secret,
+    //   { expiresIn: "1d" }
+    // );
+
+    // ============================================
     const { access_token, refresh_token } = generateTokens(
       { user_id, client_id, app_id },
       appExist.secret

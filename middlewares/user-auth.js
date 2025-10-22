@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const Response = require("../utils/response-handler");
 const { findInTableById } = require("../utils/db-query");
+const pool = require("../utils/db-connection");
 
 /**
  * @description
@@ -26,14 +27,36 @@ module.exports = async (req, res, next) => {
       },
     });
     if (!tokenExist)
-      return res.status(400).json(new Response(400, null, "Bad request"));
+      return res.status(400).json(new Response(400, null, "Invalid token"));
 
-    const result = await findInTableById("App","client_schema",tokenExist.app_id)
+    const query = `SELECT * FROM user_schema.user_blacklist ub
+    WHERE ub.user_id=$1`;
 
-    if (result.length === 0)
-      return res.status(204).json(new Response(204, null, "invalid token"));
+    const blacklist = await pool.query(query, [tokenExist.user_id]);
 
-    const decode = jwt.verify(token, result.secret);
+    if (blacklist.rows.length > 0)
+      return res
+        .status(403)
+        .json(new Response(403, null, "User temprary blacklist"));
+
+    const result = await findInTableById(
+      "App",
+      "client_schema",
+      tokenExist.app_id
+    );
+
+    if (!result)
+      return res.status(204).json(new Response(204, null, "Invalid token"));
+
+    let decode;
+    try {
+      decode = jwt.verify(token, result.secret);
+    } catch (err) {
+      return res
+        .status(401)
+        .json(new Response(401, null, "Token expired or invalid"));
+    }
+
     // update it leater
     if (!decode || !decode.client_id) {
       return res
