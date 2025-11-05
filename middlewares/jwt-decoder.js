@@ -26,22 +26,22 @@ module.exports = async (req, res, next) => {
         Message: "Unauthorized, token missing",
       });
     //   token is blacklist or not
-    const blacklistToken = await prisma.Logout_Token.findFirst({
-      where: { token: token },
-    });
-    if (blacklistToken)
-      return res.status(403).json({
-        status: "failure",
-        Message: "Expired token,access denied",
-      });
+    // const blacklistToken = await prisma.Logout_Token.findFirst({
+    //   where: { token: token },
+    // });
+    // if (blacklistToken)
+    //   return res.status(403).json({
+    //     status: "failure",
+    //     Message: "Expired token,access denied",
+    //   });
     //   decode token
     const decode = jwt.verify(token, JWT_CLIENT_SECRET);
-    if (!decode || !decode.email) {
+    if (!decode || !decode.email || !decode.client_id) {
       return res.status(401).json({ Message: "Invalid token payload" });
     }
 
     // attach decoder to reqest
-    req.user = decode;
+    req.head = decode;
     next();
   } catch (error) {
         return res.status(500).json({
