@@ -39,9 +39,14 @@ module.exports = async (req, res, next) => {
         .status(401)
         .json(new Response(401, null, "Invalid token payload"));
     }
+    console.log(decode)
     req.head = decode;
     next();
   } catch (err) {
-    return res.status(500).json({ Message: "Something went wrong", err });
+    return res
+      .status(500)
+      .json(
+        new Response(500, null, "Internal server error " + err)
+      );
   }
 };

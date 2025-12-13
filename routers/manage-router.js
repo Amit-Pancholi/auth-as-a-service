@@ -27,7 +27,7 @@ tokenRout.put("/client", verifiyClient, tokenController.putUpdateTokenForClient)
 tokenRout.delete("/by-user", verifiyUser, tokenController.deleteTokenByUser);
 
 // Client/admin deleting token
-tokenRout.delete("/by-client", verifiyClient, tokenController.deleteTokenByClient);
+tokenRout.delete("/by-client/:tokenId", verifiyClient, tokenController.deleteTokenByClient);
 tokenRout.delete("/client", verifiyClient, tokenController.deleteTokenForClient);
 
 

@@ -4,7 +4,7 @@ const manageRoute = require('./routers/manage-router')
 const app = express();
 
 app.use(express.json());
-app.use('/api/AaaS/v1',manageRoute)
+app.use('/api/AaaS/token/v1',manageRoute)
 
 app.use(error404)
 module.exports = app;

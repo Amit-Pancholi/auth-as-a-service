@@ -6,6 +6,9 @@ const jwt = require("jsonwebtoken");
 const pool = require("../utils/db-connection");
 const Response = require("../utils/response-handler");
 const { findInTableById } = require("../utils/db-query");
+// const user_url = process.env.USER_SERVICE_URL;
+// const token_url = process.env.TOKEN_SERVICE_URL;
+const rbac_url = process.env.RBAC_SERVICE_URL;
 // console.log(Object.keys(prisma));
 // =========Crete Token============
 
@@ -13,6 +16,10 @@ const { findInTableById } = require("../utils/db-query");
 exports.postGenerateTokenForUser = async (req, res, next) => {
   try {
     const { client_id, user_id, app_id } = req.body;
+
+    // let client_id = 1
+    // let app_id = 1
+    // let user_id = 2
 
     if (!client_id || !user_id || !app_id)
       return res
@@ -41,7 +48,6 @@ exports.postGenerateTokenForUser = async (req, res, next) => {
   WHERE ub.user_id=$1;`;
 
     const result = await pool.query(query, [user_id]);
-
     if (result.rows.length !== 0)
       return res
         .status(403)
@@ -53,19 +59,8 @@ exports.postGenerateTokenForUser = async (req, res, next) => {
         app_id: Number(app_id),
       },
     });
-    // console.log(tokenExist);
 
-    if (tokenExist)
-      return res.status(403).json(
-        new Response(
-          403,
-          {
-            access_token: tokenExist.access_token,
-            refresh_token: tokenExist.refresh_token,
-          },
-          "token already created"
-        )
-      );
+    // console.log(tokenExist);
 
     // ============================================
     // call rback api for getting role then use that here
@@ -81,11 +76,54 @@ exports.postGenerateTokenForUser = async (req, res, next) => {
     // );
 
     // ============================================
+    let roleResponse;
+    try {
+      roleResponse = await fetch(
+        `${rbac_url}/api/AaaS/rbac/user/v1/role/${user_id}`
+      );
+
+      if (!roleResponse.ok) {
+        let error = await roleResponse.json()
+        return res
+          .status(error.statusCode)
+          .json(
+            new Response(
+              error.statusCode,
+              null,
+              "RBAC service returned error " + error.message
+            )
+          );
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
+    }
+    const roleData = await roleResponse.json();
+    if (!roleData)
+      return res
+        .status(503)
+        .json(new Response(503, null, "Rbac service not work"));
+
+    const userRole = roleData?.data;
+
+    const roleName = userRole?.name || "Guest";
     const { access_token, refresh_token } = generateTokens(
-      { user_id, client_id, app_id },
+      { user_id, client_id, app_id, role: roleName },
       appExist.secret
     );
 
+    if (tokenExist) {
+      await prisma.token.update({
+        where: { id: tokenExist.id },
+        data: { access_token, refresh_token },
+      });
+      return res
+        .status(200)
+        .json(
+          new Response(200, { access_token, refresh_token }, "Token refreshed")
+        );
+    }
     await prisma.token.create({
       data: {
         user_id: Number(user_id),
@@ -105,9 +143,10 @@ exports.postGenerateTokenForUser = async (req, res, next) => {
         )
       );
   } catch (err) {
+    // console.log(err);
     return res
       .status(500)
-      .json({ Message: "Error genrating token", err });
+      .json(new Response(500, null, "Error genrating token " + err));
   }
 };
 
@@ -115,13 +154,12 @@ exports.postGenerateTokenForUser = async (req, res, next) => {
 exports.postGenerateTokenForClient = async (req, res, next) => {
   try {
     const { client_id } = req.body;
+    // let client_id = 1;
 
     if (!client_id)
       return res
         .status(400)
         .json(new Response(400, null, "All field required"));
-
-    // check user after creating user service
 
     const clientExist = await checkClient(client_id, res);
 
@@ -134,22 +172,21 @@ exports.postGenerateTokenForClient = async (req, res, next) => {
     });
     // console.log(tokenExist);
 
-    if (tokenExist)
-      return res.status(403).json(
-        new Response(
-          403,
-          {
-            access_token: tokenExist.access_token,
-            refresh_token: tokenExist.refresh_token,
-          },
-          "token already created"
-        )
-      );
     const { access_token, refresh_token } = generateTokens(
-      { client_id },
+      { client_id, email: clientExist.email },
       JWT_CLIENT_SECRET
     );
-
+    if (tokenExist) {
+      await prisma.client_token.update({
+        where: { id: tokenExist.id },
+        data: { access_token, refresh_token },
+      });
+      return res
+        .status(200)
+        .json(
+          new Response(200, { access_token, refresh_token }, "Token refreshed")
+        );
+    }
     await prisma.client_token.create({
       data: {
         client_id: Number(client_id),
@@ -167,7 +204,17 @@ exports.postGenerateTokenForClient = async (req, res, next) => {
         )
       );
   } catch (err) {
-    return res.status(500).json({ Message: "Error genrating token", err });
+    console.log(err);
+
+    return res
+      .status(500)
+      .json(
+        new Response(
+          500,
+          null,
+          "Internal server error genrating token for client " + err
+        )
+      );
   }
 };
 // ========= get single token for client ==============
@@ -191,7 +238,11 @@ exports.getTokenForClient = async (req, res, next) => {
       .status(200)
       .json(new Response(200, result.rows, "searched data"));
   } catch (err) {
-    return res.status(500).json({ Message: "Error fetching token", err });
+    // console.log(err);
+
+    return res
+      .status(500)
+      .json(new Response(500, null, "Intrenal server error fetching token " + err));
   }
 };
 
@@ -212,13 +263,23 @@ exports.getAllUserToken = async (req, res, next) => {
     // need to user join table
 
     const result = await pool.query(query, [client_id]);
-    if (result.rows.length === 0)
-      return res.status(204).json(new Response(204, null, "empty table"));
+    // console.log(result.rows);
+    // console.log(new Response(204,[],"lsodkfo"))
+    if (result.rows.length == 0) {
+      // console.log("hellow");
+      return res.status(200).json(new Response(200, [], "role not created"));
+    }
+
+    //  console.log("hellow");
     return res
       .status(200)
       .json(new Response(200, result.rows, "searched data"));
   } catch (err) {
-    return res.status(500).json({ Message: "Error fetching token", err });
+    // console.log(err);
+
+    return res
+      .status(500)
+      .json(new Response(500, null, "Internal server error fetching token " + err));
   }
 };
 // ======== get token filter ==========
@@ -258,7 +319,11 @@ exports.getTokenByapp = async (req, res, next) => {
       .status(200)
       .json(new Response(200, result.rows, "filtered data"));
   } catch (err) {
-    return res.status(500).json({ Message: "Error fetching token", err });
+    // console.log(err);
+
+    return res
+      .status(500)
+      .json(new Response(500, null, "Internal server error fetching token " + err));
   }
 };
 
@@ -267,6 +332,11 @@ exports.getTokenByapp = async (req, res, next) => {
 exports.putUpdateTokenForUser = async (req, res, next) => {
   try {
     const { client_id, user_id, app_id } = req.head;
+    if (!client_id || !user_id || !app_id)
+      return res
+        .status(400)
+        .json(new Response(400, null, "All data required"));
+
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
@@ -317,8 +387,31 @@ exports.putUpdateTokenForUser = async (req, res, next) => {
     // );
 
     // ============================================
+    let roleResponse;
+    try {
+      roleResponse = await fetch(
+        `${rbac_url}/api/AaaS/rbac/user/v1/role/${user_id}`
+      );
+      if (!roleResponse.ok){
+        let error = await roleResponse.json()
+        return res
+          .status(error.statusCode)
+          .json(new Response(error.statusCode, null, "RBAC service error " + error.message));
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
+    }
+    const roleData = await roleResponse.json();
+    if (!roleData)
+      return res
+        .status(503)
+        .json(new Response(503, null, "Rbac service not work"));
+
+    const userRole = roleData?.data;
     const { access_token, refresh_token } = generateTokens(
-      { user_id, client_id, app_id },
+      { user_id, client_id, app_id, role: userRole?.name || "Guest" },
       appExist.secret
     );
 
@@ -345,7 +438,11 @@ exports.putUpdateTokenForUser = async (req, res, next) => {
         )
       );
   } catch (err) {
-    return res.status(500).json({ Message: "Error updating token", err });
+    // console.log(err);
+
+    return res
+      .status(500)
+      .json(new Response(500, null, "Internal server error updating token " + err));
   }
 };
 
@@ -393,7 +490,11 @@ exports.putUpdateTokenForClient = async (req, res, next) => {
         )
       );
   } catch (err) {
-    return res.status(500).json({ Message: "Error updating token", err });
+    // console.log(err);
+
+    return res
+      .status(500)
+      .json(new Response(500, null, "Internal server error updating token " + err));
   }
 };
 // ============= remove or delete token==============
@@ -401,6 +502,7 @@ exports.putUpdateTokenForClient = async (req, res, next) => {
 // ============  by client ===================
 exports.deleteTokenByClient = async (req, res, next) => {
   try {
+    const token_id = req.params.tokenId;
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer"))
@@ -414,7 +516,7 @@ exports.deleteTokenByClient = async (req, res, next) => {
 
     const tokenExist = await prisma.token.findFirst({
       where: {
-        access_token: token,
+        id: Number(token_id),
       },
     });
     if (!tokenExist)
@@ -427,7 +529,11 @@ exports.deleteTokenByClient = async (req, res, next) => {
     });
     return res.status(200).json(new Response(200, null, "token deleted"));
   } catch (err) {
-    return res.status(500).json({ Message: "Error removing token", err });
+    // console.log(err);
+
+    return res
+      .status(500)
+      .json(new Response(500, null, "Internal server error removing token " + err));
   }
 };
 
@@ -467,7 +573,11 @@ exports.deleteTokenByUser = async (req, res, next) => {
     });
     return res.status(200).json(new Response(200, null, "token deleted"));
   } catch (err) {
-    return res.status(500).json({ Message: "Error removing tokens", err });
+    // console.log(err);
+
+    return res
+      .status(500)
+      .json(new Response(500, null, "Internal server error removing tokens " + err));
   }
 };
 
@@ -498,7 +608,10 @@ exports.deleteTokenForClient = async (req, res, next) => {
     });
     return res.status(200).json(new Response(200, null, "token deleted"));
   } catch (err) {
-    return res.status(500).json({ Message: "Error removing token", err });
+    // console.log(err);
+    return res
+      .status(500)
+      .json(new Response(500, null, "Internal server error removing token "+err));
   }
 };
 

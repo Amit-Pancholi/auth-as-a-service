@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE "token_schema"."token" ALTER COLUMN "client_id" SET DATA TYPE TEXT,
-ALTER COLUMN "user_id" SET DATA TYPE TEXT,
-ALTER COLUMN "app_id" SET DATA TYPE TEXT;
