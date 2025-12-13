@@ -7,6 +7,10 @@ const pool = require("../utils/db-connection");
 const jwt = require("jsonwebtoken");
 const { findInTableById } = require("../utils/db-query");
 const JWT_URL_SECRET = process.env.JWT_URL_SECRET;
+const user_url = process.env.USER_SERVICE_URL;
+const token_url = process.env.TOKEN_SERVICE_URL;
+const rbac_url = process.env.RBAC_SERVICE_URL;
+const user_access_url = process.env.USER_ACCESS
 
 exports.getUrlAndToken = async (req, res, next) => {
   try {
@@ -24,7 +28,7 @@ exports.getUrlAndToken = async (req, res, next) => {
 
     return res.status(200).json(
       new Response(200, {
-        url: `http://localhost:8002/api/AaaS/user/v1`,
+        url: `${user_access_url||user_url}/api/AaaS/user/v1`,
         token: token,
       })
     );
@@ -43,7 +47,7 @@ exports.getAllUser = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      "http://localhost:8002/api/AaaS/user/v1?action=all",
+      `${user_url}/api/AaaS/user/v1?action=all`,
       {
         method: "GET",
         headers: {
@@ -90,7 +94,7 @@ exports.banUser = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      "http://localhost:8002/api/AaaS/user/v1?action=ban",
+      `${user_url}/api/AaaS/user/v1?action=ban`,
       {
         method: "POST",
         headers: {
@@ -117,13 +121,9 @@ exports.banUser = async (req, res, next) => {
         .status(503)
         .json(new Response(503, null, "User service not work"));
 
-    const user = responseData?.data;
-    if (user) {
-      return res.status(200).json(new Response(200, {}, "User already baned"));
-    }
     return res
       .status(200)
-      .json(new Response(200, user, "blacklist user successfully"));
+      .json(new Response(200, null, "blacklist user successfully"));
   } catch (err) {
     console.log(err);
     return res.status(500).json(new Response(500, null, "Error getting user"));
@@ -140,7 +140,7 @@ exports.unbanUser = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      "http://localhost:8002/api/AaaS/user/v1?action=unban",
+      `${user_url}/api/AaaS/user/v1?action=unban`,
       {
         method: "POST",
         headers: {
@@ -166,13 +166,9 @@ exports.unbanUser = async (req, res, next) => {
         .status(503)
         .json(new Response(503, null, "User service not work"));
 
-    const user = responseData?.data;
-    if (!user) {
-      return res.status(200).json(new Response(200, [], "User not blacklist"));
-    }
     return res
       .status(200)
-      .json(new Response(200, user, "unban user fetched successfully"));
+      .json(new Response(200, null, "unban user fetched successfully"));
   } catch (err) {
     console.log(err);
     return res.status(500).json(new Response(500, null, "Error getting user"));
@@ -188,7 +184,7 @@ exports.getBannedUser = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      "http://localhost:8002/api/AaaS/user/v1?action=banned",
+      `${user_url}/api/AaaS/user/v1?action=banned`,
       {
         method: "GET",
         headers: {
@@ -234,7 +230,7 @@ exports.getActiveUser = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      "http://localhost:8002/api/AaaS/user/v1?action=active",
+      `${user_url}/api/AaaS/user/v1?action=active`,
       {
         method: "GET",
         headers: {
@@ -278,7 +274,7 @@ exports.getInactiveUser = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      "http://localhost:8002/api/AaaS/user/v1?action=inactive",
+      `${user_url}/api/AaaS/user/v1?action=inactive`,
       {
         method: "GET",
         headers: {
@@ -397,7 +393,7 @@ exports.getSecret = async (req, res, next) => {
       .json(
         new Response(
           200,
-          { secret: appExist.secret },
+          { name: appExist.app_name, secret: appExist.secret },
           "Secret fetch successfully"
         )
       );
@@ -429,7 +425,7 @@ exports.postCreateRole = async (req, res, next) => {
         );
 
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/v1/create/${app_id}`,
+      `${rbac_url}/api/AaaS/rbac/v1/create/${app_id}`,
       {
         method: "POST",
         headers: {
@@ -481,7 +477,7 @@ exports.putUpdateRole = async (req, res, next) => {
       return res.status(404).json(new Response(404, null, "role not found"));
 
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/v1/update/${role_id}`,
+      `${rbac_url}/api/AaaS/rbac/v1/update/${role_id}`,
       {
         method: "PUT",
         headers: {
@@ -533,7 +529,7 @@ exports.deleteRole = async (req, res, next) => {
       return res.status(404).json(new Response(404, null, "role not found"));
 
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/v1/delete/${role_id}`,
+      `${rbac_url}/api/AaaS/rbac/v1/delete/${role_id}`,
       {
         method: "DELETE",
         headers: {
@@ -555,11 +551,10 @@ exports.deleteRole = async (req, res, next) => {
         .status(503)
         .json(new Response(503, null, "Rbac service not work"));
 
-    const role = responseData?.data;
 
     return res
       .status(200)
-      .json(new Response(200, role, "role removed successfully"));
+      .json(new Response(200, null, "role removed successfully"));
   } catch (err) {
     console.log(err);
     return res.status(500).json(new Response(500, null, "Error removing role"));
@@ -575,7 +570,7 @@ exports.getRoles = async (req, res, next) => {
         .status(401)
         .json(new Response(401, null, "Missing Authorization token"));
 
-    const response = await fetch(`http://localhost:8003/api/AaaS/rbac/v1/all`, {
+    const response = await fetch(`${rbac_url}/api/AaaS/rbac/v1/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -596,6 +591,8 @@ exports.getRoles = async (req, res, next) => {
         .json(new Response(503, null, "Rbac service not work"));
 
     const role = responseData?.data;
+    if (!role)
+      return res.status(404).json(new Response(404, [], "role not found"));
 
     return res
       .status(200)
@@ -632,7 +629,7 @@ exports.postAssinRole = async (req, res, next) => {
       return res.status(404).json(new Response(404, null, "role not found"));
 
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/user/v1/add/${role_id}`,
+      `${rbac_url}/api/AaaS/rbac/user/v1/add/${role_id}`,
       {
         method: "POST",
         headers: {
@@ -670,34 +667,89 @@ exports.postAssinRole = async (req, res, next) => {
       .json(new Response(500, null, "Error adding role to user"));
   }
 };
+exports.getRolesByAppId = async (req, res, next) => {
+  try {
+     const {app_id } = req.body;
+     const token = req.headers.authorization;
+     if (!token)
+       return res
+         .status(401)
+         .json(new Response(401, null, "Missing Authorization token"));
 
+     const appExist = await checkApp(app_id, res);
+    
+
+     if ( !appExist) return;
+
+     const response = await fetch(
+       `${rbac_url}/api/AaaS/rbac/v1/app/${app_id}`,
+       {
+         method: "GET",
+         headers: {
+           "Content-Type": "application/json",
+           Authorization: token,
+         },
+       }
+     );
+     if (!response.ok) {
+       return res
+         .status(response.status)
+         .json(
+           new Response(response.status, null, "Rbac service returned error")
+         );
+     }
+     const responseData = await response.json();
+     if (!responseData)
+       return res
+         .status(503)
+         .json(new Response(503, null, "Rbac service not work"));
+
+     const role = responseData?.data;
+
+     return res
+       .status(200)
+       .json(new Response(200, role, "role fetch successfully"));
+  } catch (err) {
+     console.log(err);
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error fetching role to user"));
+  }
+}
 exports.putUpdateAssinRole = async (req, res, next) => {
   try {
-    const { role_id, user_id, app_id } = req.body;
+    const { ur_id,role_id } = req.body;
     const token = req.headers.authorization;
     if (!token)
       return res
         .status(401)
         .json(new Response(401, null, "Missing Authorization token"));
 
-    const appExist = await checkApp(app_id, res);
-    const userExist = await checkUser(user_id, res);
+    // const appExist = await checkApp(app_id, res);
+    // const userExist = await checkUser(user_id, res);
 
-    if (!userExist || !appExist) return;
+    // if (!userExist || !appExist) return;
 
-    if (userExist.app_id != appExist.id)
-      return res
-        .status(400)
-        .json(
-          new Response(400, null, "user and app not related to each other")
-        );
+    // if (userExist.app_id != appExist.id)
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       new Response(400, null, "user and app not related to each other")
+    //     );
     const roleExist = await findInTableById("role", "rbac_schema", role_id);
 
     if (!roleExist)
       return res.status(404).json(new Response(404, null, "role not found"));
 
+    // const assignedRole = await findInTableById("user_role", "rbac_schema", ur_id);
+
+    const query = `select * from rbac_schema.user_role ur where ur.id=$1;`;
+    const assignedRole =  await pool.query( query, [ur_id]);
+    if (assignedRole.rows.length === 0)
+      return res.status(404).json(new Response(404, null, "assigned role not found"));
+
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/user/v1/update/${role_id}`,
+      `${rbac_url}/api/AaaS/rbac/user/v1/update/${role_id}`,
       {
         method: "PUT",
         headers: {
@@ -705,8 +757,7 @@ exports.putUpdateAssinRole = async (req, res, next) => {
           Authorization: token,
         },
         body: JSON.stringify({
-          user_id,
-          app_id,
+          ur_id,
         }),
       }
     );
@@ -754,7 +805,7 @@ exports.deleteAssinRole = async (req, res, next) => {
         .json(new Response(404, null, "user and role not found"));
 
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/user/v1/remove/${ur_id}`,
+      `${rbac_url}/api/AaaS/rbac/user/v1/remove/${ur_id}`,
       {
         method: "DELETE",
         headers: {
@@ -776,11 +827,10 @@ exports.deleteAssinRole = async (req, res, next) => {
         .status(503)
         .json(new Response(503, null, "Rbac service not work"));
 
-    const roleWithUser = responseData?.data;
 
     return res
       .status(200)
-      .json(new Response(200, roleWithUser, "role remove successfully"));
+      .json(new Response(200,null, "role remove successfully"));
   } catch (err) {
     console.log(err);
     return res
@@ -799,7 +849,7 @@ exports.getAlluserWithAssinRole = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/user/v1/all`,
+      `${rbac_url}/api/AaaS/rbac/user/v1/all`,
       {
         method: "GET",
         headers: {
@@ -853,7 +903,7 @@ exports.getAlluserWithAssinRoleByAppId = async (req, res, next) => {
     if (!appExist) return;
 
     const response = await fetch(
-      `http://localhost:8003/api/AaaS/rbac/user/v1/app/${app_id}`,
+      `${rbac_url}/api/AaaS/rbac/user/v1/app/${app_id}`,
       {
         method: "GET",
         headers: {
@@ -903,7 +953,7 @@ exports.getUserWithToken = async (req, res, next) => {
         .json(new Response(401, null, "Missing Authorization token"));
 
     const response = await fetch(
-      `http://localhost:8001/api/AaaS/token/v1/user`,
+      `${token_url}/api/AaaS/token/v1/user`,
       {
         method: "GET",
         headers: {
@@ -927,6 +977,9 @@ exports.getUserWithToken = async (req, res, next) => {
         .json(new Response(503, null, "token service not work"));
 
     const tokenWithUser = responseData?.data;
+
+    if (!tokenWithUser)
+      return res.status(404).json(new Response(404, [], "user not found"));
 
     return res
       .status(200)
@@ -957,7 +1010,7 @@ exports.getUserWithTokenByApp = async (req, res, next) => {
     if (!appExist) return;
 
     const response = await fetch(
-      `http://localhost:8001/api/AaaS/token/v1/app/${app_id}`,
+      `${token_url}/api/AaaS/token/v1/app/${app_id}`,
       {
         method: "GET",
         headers: {
@@ -980,6 +1033,9 @@ exports.getUserWithTokenByApp = async (req, res, next) => {
         .json(new Response(503, null, "token service not work"));
 
     const tokenWithUser = responseData?.data;
+
+    if (!tokenWithUser)
+      return res.status(404).json(new Response(404, [], "user not found"));
 
     return res
       .status(200)
@@ -1083,7 +1139,7 @@ exports.postAddApps = [
   },
 ];
 
-exports.postUpdateApps = [
+exports.putUpdateApps = [
   // 🔹 Field validations
   check("app_name")
     .trim()
@@ -1270,6 +1326,58 @@ exports.deleteApp = async (req, res, next) => {
     return res.status(500).json(new Response(500, null, "Error removing app"));
   }
 };
+
+exports.postRemoveUserToken = async (req, res, next) => {
+  try {
+    const { token_id } = req.body;
+    const token = req.headers.authorization;
+    if (!token)
+      return res
+        .status(401)
+        .json(new Response(401, null, "Missing Authorization token"));
+
+    const response = await fetch(
+      `${token_url}/api/AaaS/token/v1/by-client/${token_id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      }
+    );
+    if (!response.ok) {
+      return res
+        .status(response.status)
+        .json(
+          new Response(response.status, null, "token service returned error")
+        );
+    }
+    const responseData = await response.json();
+    if (!responseData)
+      return res
+        .status(503)
+        .json(new Response(503, null, "token service not work"));
+
+    const tokenWithUser = responseData?.data;
+
+    if (!tokenWithUser)
+      return res.status(404).json(new Response(404, [], "user not found"));
+
+    return res
+      .status(200)
+      .json(
+        new Response(
+          200,
+          tokenWithUser,
+          "user token removed successfully"
+        )
+      );
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json(new Response(500, null, "Error removing app"));
+  }
+};
 // use in future
 async function callService(url, method, token, body = null) {
   const options = {
@@ -1285,3 +1393,4 @@ async function callService(url, method, token, body = null) {
   if (!response.ok) throw new Error(`Service error: ${response.status}`);
   return response.json();
 }
+

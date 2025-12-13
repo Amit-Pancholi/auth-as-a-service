@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const JWT_CLIENT_SECRET = process.env.JWT_CLIENT_SECRET;
+const Response = require('../utils/response-handler.js')
 /**
  * @description
  * it will a middleware that will validate token 
@@ -14,17 +15,11 @@ module.exports = async (req, res, next) => {
     //check for header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer"))
-      return res.status(400).json({
-        status: "failure",
-        Message: "Bad request,Invalid token",
-      });
+      return res.status(400).json(new Response(400,null,"Invalid token"));
     // check token
     const token = authHeader.split(" ")[1];
     if (!token)
-      return res.status(401).json({
-        status: "failure",
-        Message: "Unauthorized, token missing",
-      });
+      return res.status(401).json(new Response(401,null,"Unauthorized request"));
     //   token is blacklist or not
     // const blacklistToken = await prisma.Logout_Token.findFirst({
     //   where: { token: token },
@@ -37,17 +32,13 @@ module.exports = async (req, res, next) => {
     //   decode token
     const decode = jwt.verify(token, JWT_CLIENT_SECRET);
     if (!decode || !decode.email || !decode.client_id) {
-      return res.status(401).json({ Message: "Invalid token payload" });
+      return res.status(400).json(new Response(400,null,"Invalid token"));
     }
 
     // attach decoder to reqest
     req.head = decode;
     next();
   } catch (error) {
-        return res.status(500).json({
-          status: "failure",
-          Message: "Error validate token",
-          error: error.message,
-        });
+        return res.status(500).json(new Response(500,null,"Server side error: " + error));
   }
 };
