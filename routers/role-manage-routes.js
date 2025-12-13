@@ -20,4 +20,6 @@ router.delete("/delete/:roleId", verifyClient, roleController.deleteRole);
 // GET /api/role/all
 router.get("/all", verifyClient, roleController.getAllRole);
 
+router.get ("/app/:appId", verifyClient, roleController.getAllRoleByAppId);
+
 module.exports = router;

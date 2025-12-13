@@ -4,7 +4,9 @@ const Response = require("../utils/response-handler");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const pool = require("../utils/db-connection");
-
+// const user_url = process.env.USER_SERVICE_URL;
+// const token_url = process.env.TOKEN_SERVICE_URL;
+// const rbac_url = process.env.RBAC_SERVICE_URL;
 // =========== role creating =========
 // provide client idin req head
 // app id through url
@@ -21,15 +23,25 @@ exports.postCreateRole = [
     .withMessage("role can only contain letters, numbers, spaces, or hyphens"),
   check("description").trim().isString(),
   (req, res, next) => {
-    const error = validationResult(req);
-    if (!error.isEmpty()) {
-      return res.status(400).json({
-        status: "failure",
-        Message: "Error occure in sending data",
-        error: error.array().map((err) => err.msg),
-      });
-    } else {
-      next();
+    try {
+      const error = validationResult(req);
+      if (!error.isEmpty()) {
+        return res
+          .status(400)
+          .json(
+            new Response(
+              400,
+              null,
+              "Error sending data " + error.array().map((err) => err.msg)
+            )
+          );
+      } else {
+        next();
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
     }
   },
   async (req, res, next) => {
@@ -66,15 +78,23 @@ exports.postCreateRole = [
         },
       });
 
-      return res
-        .status(201)
-        .json(new Response(201, role, "role created successfully"));
+      return res.status(201).json(
+        new Response(
+          201,
+          {
+            role: {
+              id: role.id,
+              name: role.name,
+              description: role.description,
+            },
+          },
+          "role created successfully"
+        )
+      );
     } catch (err) {
-      return res.status(500).json({
-        status: "failure",
-        Message: "Error creating role",
-        error: err.message,
-      });
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
     }
   },
 ];
@@ -96,15 +116,25 @@ exports.putUpdateRole = [
     .withMessage("role can only contain letters, numbers, spaces, or hyphens"),
   check("description").trim().isString(),
   (req, res, next) => {
-    const error = validationResult(req);
-    if (!error.isEmpty()) {
-      return res.status(400).json({
-        status: "failure",
-        Message: "Error occure in sending data",
-        error: error.array().map((err) => err.msg),
-      });
-    } else {
-      next();
+    try {
+      const error = validationResult(req);
+      if (!error.isEmpty()) {
+        return res
+          .status(400)
+          .json(
+            new Response(
+              400,
+              null,
+              "Error sending data " + error.array().map((err) => err.msg)
+            )
+          );
+      } else {
+        next();
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
     }
   },
   async (req, res, next) => {
@@ -174,15 +204,23 @@ exports.putUpdateRole = [
           description,
         },
       });
-      return res
-        .status(200)
-        .json(new Response(200, role, "role updated successfully"));
+      return res.status(200).json(
+        new Response(
+          200,
+          {
+            role: {
+              id: role.id,
+              name: role.name,
+              description: role.description,
+            },
+          },
+          "role updated successfully"
+        )
+      );
     } catch (err) {
-      return res.status(500).json({
-        status: "failure",
-        Message: "Error updating role",
-        error: err.message,
-      });
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
     }
   },
 ];
@@ -236,13 +274,11 @@ exports.deleteRole = async (req, res, next) => {
     });
     return res
       .status(200)
-      .json(new Response(200, updatedRole, "role removed successfully"));
+      .json(new Response(200, null, "role removed successfully"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error removing role",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   }
 };
 
@@ -257,21 +293,63 @@ exports.getAllRole = async (req, res, next) => {
     if (!clientExist) return;
 
     const query = `
-    SELECT r.id,r.name,r.description,c.first_name,c.last_name,a.app_name,r."createdAt",r."updatedAt"
+    SELECT r.id,r.name,r.description,a.app_name,r.active,r."createdAt",r."updatedAt"
     FROM rbac_schema."role" r
     JOIN client_schema."Client" c ON c.id = r.client_id
     JOIN client_schema."App" a ON a.id = r.app_id
-    WHERE c.id =$1 AND r.active = true;`;
+    WHERE c.id =$1`;
 
     const role = await pool.query(query, [client_id]);
     if (role.rows.length == 0)
       return res.status(200).json(new Response(200, [], "No role exist"));
     return res.status(200).json(new Response(200, role.rows, "fetched roles"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error getting role",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
+  }
+};
+
+exports.getAllRoleByAppId = async (req, res, next) => {
+  try {
+    const { client_id } = req.head;
+    const app_id = req.params.appId;
+    // const client_id = 1;
+    const clientExist = await checkClient(client_id, res);
+    const appExist = await checkApp(app_id, res);
+
+    if (!clientExist || !appExist) return;
+
+    if (!appExist || appExist.client_id != client_id)
+      return res
+        .status(400)
+        .json(new Response(400, null, "bad request client or app not relate"));
+
+    const query = `
+    SELECT 
+        r.id,
+        r.name,
+        r.description,
+        a.app_name,
+        r.active,
+        r."createdAt",
+        r."updatedAt"
+    FROM rbac_schema."role" r
+    JOIN client_schema."Client" c 
+        ON c.id = r.client_id
+    JOIN client_schema."App" a 
+        ON a.id = r.app_id
+    WHERE c.id = $1 AND a.id = $2 AND r.active = true;
+`;
+
+    const role = await pool.query(query, [client_id, app_id]);
+    console.log(role.rows);
+    if (role.rows.length == 0)
+      return res.status(200).json(new Response(200, [], "No role exist"));
+    return res.status(200).json(new Response(200, role.rows, "fetched roles"));
+  } catch (err) {
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   }
 };

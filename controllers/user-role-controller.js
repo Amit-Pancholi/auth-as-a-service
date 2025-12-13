@@ -3,6 +3,9 @@ const Response = require("../utils/response-handler");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const pool = require("../utils/db-connection");
+// const user_url = process.env.USER_SERVICE_URL;
+// const token_url = process.env.TOKEN_SERVICE_URL;
+// const rbac_url = process.env.RBAC_SERVICE_URL;
 // const { query } = require("express-validator");
 
 // ======== add role to user ==============
@@ -12,13 +15,13 @@ const pool = require("../utils/db-connection");
 exports.postAddRoleToUser = async (req, res, next) => {
   try {
     const { client_id } = req.head;
-    // const client_id = 1
     const { user_id, app_id } = req.body;
+
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
 
-    if (!clientExist || !userExist || !appExist) return;
+    if (!clientExist || !appExist || !userExist) return;
 
     if (
       userExist.app_id !== Number(app_id) ||
@@ -30,36 +33,51 @@ exports.postAddRoleToUser = async (req, res, next) => {
           new Response(400, null, "User not associated with this client or app")
         );
     }
-    const assinedRole = await prisma.user_role.findFirst({
+
+    const role_id = req.params.roleId;
+
+    const roleExist = await prisma.role.findUnique({
+      where: { id: Number(role_id) },
+    });
+
+    if (!roleExist || !roleExist.active) {
+      return res
+        .status(404)
+        .json(new Response(404, null, "role not found or removed"));
+    }
+
+    const assignedRole = await prisma.user_role.findFirst({
       where: {
         user_id: Number(user_id),
         app_id: Number(app_id),
       },
     });
 
-    if (assinedRole)
-      return res
-        .status(400)
-        .json(
-          new Response(
-            400,
-            null,
-            "user already have a role so you will update that role or remove"
-          )
-        );
+    // UPDATE CASE
+    if (assignedRole) {
+      const updated = await prisma.user_role.update({
+        where: { id: assignedRole.id },
+        data: { role_id: Number(role_id) },
+      });
 
-    const role_id = req.params.roleId;
-    const roleExist = await prisma.role.findUnique({
-      where: {
-        id: Number(role_id),
-      },
-    });
-    if (!roleExist || roleExist.active === false)
-      return res
-        .status(404)
-        .json(new Response(404, null, "role not found or removed"));
+      return res.status(200).json(
+        new Response(
+          200,
+          {
+            user: {
+              role_id: updated.role_id,
+              name: `${userExist.first_name} ${userExist.last_name}`,
+              email: userExist.email,
+              role: roleExist.name,
+            },
+          },
+          "Successfully updated role to user"
+        )
+      );
+    }
 
-    const addRole = await prisma.user_role.create({
+    // NEW ROLE CASE
+    const newRoleAssin = await prisma.user_role.create({
       data: {
         user_id: Number(user_id),
         app_id: Number(app_id),
@@ -72,24 +90,24 @@ exports.postAddRoleToUser = async (req, res, next) => {
         201,
         {
           user: {
-            name: userExist.first_name + " " + userExist.last_name,
+            role_id: newRoleAssin.role_id,
+            name: `${userExist.first_name} ${userExist.last_name}`,
             email: userExist.email,
             role: roleExist.name,
           },
         },
-        "Successfully add role to user"
+        "Successfully added role to user"
       )
     );
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error add role to user",
-      error: err.message,
-    });
+    // console.log(err);
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   } finally {
-    await prisma.$disconnect().catch((err) => {
-      console.log("error in disconnect: " + err.message);
-    });
+    await prisma
+      .$disconnect()
+      .catch((err) => console.log("error in disconnect: " + err.message));
   }
 };
 
@@ -101,27 +119,26 @@ exports.postUpdateRole = async (req, res, next) => {
   try {
     const { client_id } = req.head;
     // const client_id = 1;
-    const { user_id, app_id } = req.body;
+    const { ur_id } = req.body;
     const clientExist = await checkClient(client_id, res);
-    const appExist = await checkApp(app_id, res);
-    const userExist = await checkUser(user_id, res);
+    // const appExist = await checkApp(app_id, res);
+    // const userExist = await checkUser(user_id, res);
 
-    if (!clientExist || !userExist || !appExist) return;
+    if (!clientExist) return;
 
-    if (
-      userExist.app_id !== Number(app_id) ||
-      appExist.client_id !== Number(client_id)
-    ) {
-      return res
-        .status(400)
-        .json(
-          new Response(400, null, "User not associated with this client or app")
-        );
-    }
+    // if (
+    //   userExist.app_id !== Number(app_id) ||
+    //   appExist.client_id !== Number(client_id)
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       new Response(400, null, "User not associated with this client or app")
+    //     );
+    // }
     const assinedRole = await prisma.user_role.findFirst({
       where: {
-        user_id: Number(user_id),
-        app_id: Number(app_id),
+        id: Number(ur_id),
       },
     });
     if (!assinedRole)
@@ -159,25 +176,13 @@ exports.postUpdateRole = async (req, res, next) => {
       },
     });
 
-    return res.status(200).json(
-      new Response(
-        200,
-        {
-          user: {
-            name: userExist.first_name + " " + userExist.last_name,
-            email: userExist.email,
-            role: roleExist.name,
-          },
-        },
-        "role updated successfully"
-      )
-    );
+    return res
+      .status(200)
+      .json(new Response(200, null, "role updated successfully"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error updating role of user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   } finally {
     await prisma.$disconnect().catch((err) => {
       console.log("error in disconnect: " + err.message);
@@ -190,7 +195,7 @@ exports.postUpdateRole = async (req, res, next) => {
 // user role id through url
 exports.deleteRoleFromUser = async (req, res, next) => {
   try {
-    const { client_id} = req.head;
+    const { client_id } = req.head;
     // const client_id = 1;
     const clientExist = await checkClient(client_id, res);
 
@@ -199,7 +204,7 @@ exports.deleteRoleFromUser = async (req, res, next) => {
     const user_role_id = req.params.URId;
     const assinedRole = await prisma.user_role.findUnique({
       where: {
-        id: Number(user_role_id)
+        id: Number(user_role_id),
       },
     });
     if (!assinedRole)
@@ -222,11 +227,9 @@ exports.deleteRoleFromUser = async (req, res, next) => {
       .status(200)
       .json(new Response(200, null, "role removed from user successfully"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error removing role from user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   } finally {
     await prisma.$disconnect().catch((err) => {
       console.log("error in disconnect: " + err.message);
@@ -239,13 +242,13 @@ exports.deleteRoleFromUser = async (req, res, next) => {
 
 exports.getAllRoledUser = async (req, res, next) => {
   try {
-    const { client_id} = req.head;
+    const { client_id } = req.head;
     // const client_id = 1;
     const clientExist = await checkClient(client_id, res);
 
     if (!clientExist) return;
 
-    const query = `SELECT ur.id AS user_role_id,u.first_name,u.last_name,u.email,u.mobile_no,a.app_name,r.name AS role
+    const query = `SELECT ur.id AS user_role_id,u.first_name,u.last_name,u.email,u.mobile_no,a.id AS app_id,a.app_name,r.name AS role
      FROM rbac_schema.user_role ur
      JOIN rbac_schema.role r ON ur.role_id=r.id
      JOIN user_schema.user u ON u.id=ur.user_id
@@ -274,11 +277,9 @@ exports.getAllRoledUser = async (req, res, next) => {
         )
       );
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error role and related user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   }
 };
 
@@ -288,10 +289,10 @@ exports.getAllRoledUser = async (req, res, next) => {
 //  app id in url
 exports.getAllRoledUsersByApp = async (req, res, next) => {
   try {
-    const { client_id} = req.head;
+    const { client_id } = req.head;
     // const client_id = 1
-    const  app_id  = req.params.appId;
-    console.log(app_id)
+    const app_id = req.params.appId;
+    console.log(app_id);
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
 
@@ -332,11 +333,9 @@ exports.getAllRoledUsersByApp = async (req, res, next) => {
         )
       );
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error fetching role and related user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   }
 };
 
@@ -349,13 +348,13 @@ exports.getSingleUserRole = async (req, res, next) => {
     const userExist = await checkUser(user_id, res);
     if (!userExist) return;
 
-    const appExist = await checkApp(userExist.app_id,res);
+    const appExist = await checkApp(userExist.app_id, res);
 
-    if(!appExist) return;
+    if (!appExist) return;
 
     const query = `SELECT ur.id AS user_role_id,r.name AS user_role
-    FROM role r
-    JOIN user_role ur ON ur.role_id=r.id
+    FROM rbac_schema.role r
+    JOIN rbac_schema.user_role ur ON ur.role_id=r.id
     WHERE ur.user_id=$1;`;
 
     const result = await pool.query(query, [user_id]);
@@ -370,10 +369,8 @@ exports.getSingleUserRole = async (req, res, next) => {
         new Response(200, result.rows[0], "role fetch successfully for user")
       );
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error role and related user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Serverside error " + err));
   }
 };

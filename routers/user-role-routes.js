@@ -22,7 +22,7 @@ router.get("/all", verifyClient, userRoleController.getAllRoledUser);
 
 // Get all users with roles (by app)
 router.get(
-  "/all/app/:appId",
+  "/app/:appId",
   verifyClient,
   userRoleController.getAllRoledUsersByApp
 );

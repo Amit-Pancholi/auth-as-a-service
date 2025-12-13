@@ -12,18 +12,20 @@ module.exports = async (req, res, next) => {
       return res
         .status(401)
         .json(new Response(401, null, "Bad request,Invalid token"));
-
     const token = authHeader.split(" ")[1];
     if (!token)
       return res.status(401).json(new Response(401, null, "broken request"));
 
-    const tokenExist = await prisma.client_token.findFirst({
-      where: {
-        access_token: token,
-      },
-    });
-    if (!tokenExist)
-      return res.status(401).json(new Response(401, null, "Invalid token"));
+//     const tokenExist = await prisma.client_token.findFirst({
+//       where: {
+//         access_token: token,
+//       },
+//     });
+// console.log("hellow");
+
+//     console.log(tokenExist)
+//     if (!tokenExist)
+//       return res.status(401).json(new Response(401, null, "Invalid token"));
 
     let decode;
     try {
@@ -34,14 +36,15 @@ module.exports = async (req, res, next) => {
         .json(new Response(401, null, "Token expired or invalid"));
     }
 
-    if (!decode || !decode.email || !decode.client_id) {
+    if (!decode || !decode.email || !decode.client_id ||!decode.email) {
       return res
         .status(401)
         .json(new Response(401, null, "Invalid token payload"));
     }
+    console.log(decode)
     req.head = decode;
     next();
   } catch (err) {
-    return res.status(500).json({ Message: "Something went wrong", err });
+return res.status(500).json(new Response(500, null, "Serverside error " + err));
   }
 };
