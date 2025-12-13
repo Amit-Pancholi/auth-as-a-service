@@ -4,11 +4,19 @@ const Response = require("../utils/response-handler");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const pool = require("../utils/db-connection");
-const { findInTableById } = require("../utils/db-query");
+// const { findInTableById } = require("../utils/db-query");
+const bcrypt = require("bcrypt");
+// const user_url = process.env.USER_SERVICE_URL;
+// const token_url = process.env.TOKEN_SERVICE_URL;
+// const rbac_url = process.env.RBAC_SERVICE_URL;
 // all token data come in req head
 exports.postDeleteUser = async (req, res, next) => {
   try {
     const { user_id, client_id, app_id } = req.head;
+    // let client_id = 1;
+    // let user_id = 2;
+    // let app_id = 1;
+
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
@@ -27,11 +35,9 @@ exports.postDeleteUser = async (req, res, next) => {
       .status(200)
       .json(new Response(200, null, "User removed successfully"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error loginning user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error removing user " + err));
   }
 };
 
@@ -53,30 +59,31 @@ exports.postUpdateUser = [
     .matches(/^[a-zA-Z\s]+$/)
     .withMessage("Last name can only contain letters and spaces"),
   check("password").trim(),
-  check("confirmPassword")
-    .trim()
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
   (req, res, next) => {
-    const error = validationResult(req);
-    if (!error.isEmpty()) {
-      return res.status(400).json({
-        status: "failure",
-        Message: "Error occure in sending data",
-        error: error.array().map((err) => err.msg),
-      });
-    } else {
-      next();
+    try {
+      const error = validationResult(req);
+      if (!error.isEmpty()) {
+        return res
+          .status(400)
+          .json(
+            new Response(
+              400,
+              null,
+              "Error sending data " + error.array().map((err) => err.msg)
+            )
+          );
+      } else {
+        next();
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
     }
   },
   async (req, res, next) => {
     try {
       const { user_id, client_id, app_id } = req.head;
-
       const clientExist = await checkClient(client_id, res);
       const appExist = await checkApp(app_id, res);
       const userExist = await checkUser(user_id, res);
@@ -109,11 +116,9 @@ exports.postUpdateUser = [
         .status(200)
         .json(new Response(200, null, "user update successfully"));
     } catch (err) {
-      return res.status(500).json({
-        status: "failure",
-        Message: "Error updating user",
-        error: err.message,
-      });
+      return res
+        .status(500)
+        .json(new Response(500, null, "Error updating user " + err));
     }
   },
 ];
@@ -122,7 +127,12 @@ exports.postUpdateUser = [
 // user id and client id will send through res head and also check user is block or not through middlewar
 exports.postBanUser = async (req, res, next) => {
   try {
-    const { user_id, client_id, app_id } = req.head;
+    const { client_id } = req.head;
+    const { app_id, user_id } = req.body;
+
+    // let client_id = 1;
+    // let user_id = 3;
+    // let app_id = 1;
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
@@ -134,10 +144,12 @@ exports.postBanUser = async (req, res, next) => {
         app_id: Number(app_id),
       },
     });
+    // console.log(user_id, app_id);
+    // console.log(userBan);
     if (userBan)
       return res
-        .status(400)
-        .json(new Response(400, null, "user already in blacklist"));
+        .status(200)
+        .json(new Response(200, null, "user already in blacklist"));
 
     await prisma.user_blacklist.create({
       data: {
@@ -150,22 +162,29 @@ exports.postBanUser = async (req, res, next) => {
       .status(201)
       .json(new Response(201, null, "user add to blacklist"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error processing blacklist operation",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error blacklisting operation " + err));
   }
 };
 
 exports.removeUserFromBlacklist = async (req, res, next) => {
   try {
-    const { user_id, client_id, app_id } = req.head;
+    const { client_id } = req.head;
+    const { user_id, app_id } = req.body;
+    // let client_id = 1;
+    // let user_id = 3;
+    // let app_id = 1;
     const clientExist = await checkClient(client_id, res);
     const appExist = await checkApp(app_id, res);
     const userExist = await checkUser(user_id, res);
-
+    console.log(client_id, user_id, app_id);
     if (!clientExist || !appExist || !userExist) return;
+    // if (clientExist.id != appExist.client_id || appExist.id != userExist.app_id)
+    //   return res
+    //     .status(400)
+    //     .json(new Response(400, null, "client,app,user not related"));
+    // console.log("hello");
 
     const userBan = await prisma.user_blacklist.findFirst({
       where: {
@@ -173,10 +192,11 @@ exports.removeUserFromBlacklist = async (req, res, next) => {
         app_id: Number(app_id),
       },
     });
+    // console.log(userBan);
     if (!userBan)
       return res
-        .status(400)
-        .json(new Response(400, null, "user not in blacklist"));
+        .status(200)
+        .json(new Response(200, null, "user not in blacklist"));
 
     await prisma.user_blacklist.delete({
       where: {
@@ -188,11 +208,9 @@ exports.removeUserFromBlacklist = async (req, res, next) => {
       .status(200)
       .json(new Response(200, null, "user removed from blacklist"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error processing blacklist operation",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error blacklisting operation " + err));
   }
 };
 
@@ -205,11 +223,15 @@ exports.removeUserFromBlacklist = async (req, res, next) => {
 exports.getAllUser = async (req, res, next) => {
   try {
     const { client_id } = req.head;
+    // let client_id = 1
     const clientExist = await checkClient(client_id);
 
     if (!clientExist) return;
 
-    const result = await fetchUsersByStatus(client_id);
+    // console.log(clientExist)
+    const result = await fetchAllUnbannedUsers(client_id);
+
+    // console.log(result.rows);
 
     if (result?.rows?.length == 0)
       return res.status(200).json(new Response(200, [], "User not available"));
@@ -218,11 +240,9 @@ exports.getAllUser = async (req, res, next) => {
       .status(200)
       .json(new Response(200, result?.rows, "User fetched"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error getting all user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error getting user " + err));
   }
 };
 
@@ -230,11 +250,14 @@ exports.getAllUser = async (req, res, next) => {
 exports.getActiveUser = async (req, res, next) => {
   try {
     const { client_id } = req.head;
+    // let client_id = 1;
     const clientExist = await checkClient(client_id);
 
     if (!clientExist) return;
 
-    const result = await fetchUsersByStatus(client_id,true);
+    const result = await fetchUsersByStatus(client_id, true);
+
+    // console.log(result);
 
     if (result?.rows?.length == 0)
       return res.status(200).json(new Response(200, [], "User not available"));
@@ -243,11 +266,9 @@ exports.getActiveUser = async (req, res, next) => {
       .status(200)
       .json(new Response(200, result?.rows, "Active user fetched"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error active all user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error fetching user " + err));
   }
 };
 
@@ -255,11 +276,12 @@ exports.getActiveUser = async (req, res, next) => {
 exports.getInactiveUser = async (req, res, next) => {
   try {
     const { client_id } = req.head;
+    // let client_id = 1
     const clientExist = await checkClient(client_id);
 
     if (!clientExist) return;
 
-    const result = await fetchUsersByStatus(client_id,false);
+    const result = await fetchUsersByStatus(client_id, false);
 
     if (result?.rows?.length == 0)
       return res.status(200).json(new Response(200, [], "User not available"));
@@ -268,11 +290,9 @@ exports.getInactiveUser = async (req, res, next) => {
       .status(200)
       .json(new Response(200, result?.rows, "Inactive user fetched"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error getting inactive user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error fetching user " + err));
   }
 };
 
@@ -280,54 +300,74 @@ exports.getInactiveUser = async (req, res, next) => {
 exports.getBanUser = async (req, res, next) => {
   try {
     const { client_id } = req.head;
+    // let client_id = 1
     const clientExist = await checkClient(client_id);
 
     if (!clientExist) return;
 
     const query = `
-    SELECT u.first_name,u.last_name,u.email,u.mobile_no,a.app_name,u.active,
+    SELECT u.id,u.first_name,u.last_name,u.email,u.mobile_no,a.id AS "app_id",a.app_name,u.active,
     'banned' AS status
-    FROM user u
-    JOIN client_schema."App" a ON u.app_id=a.id
-    JOIN user_blacklist ub ON ub.user_id=u.id
-    WHERE a.client_id=${client_id};
+    FROM user_schema.user u
+    JOIN user_schema.user_blacklist ub ON ub.user_id=u.id
+    JOIN client_schema."App" a ON a.id=u.app_id
+    WHERE a.client_id=$1;
   `;
 
-  const result = await pool.query(query)
-     if (result?.rows?.length == 0)
-      return res.status(200).json(new Response(200, [], "User not available"));
+    const result = await pool.query(query, [client_id]);
+    // console.log(result.rows);
+    if (result?.rows?.length == 0)
+      return res.status(200).json(new Response(200, [], "User not blacklist"));
 
     return res
       .status(200)
       .json(new Response(200, result?.rows, "banned user fetched"));
   } catch (err) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error getting banned user",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error fetching banned user " + err));
   }
 };
 
 // helper functions
 
 /**
- * 
+ *
  * @param client_id it will a int that will define for client id
- * @param status it will a bool that will define for active user or not 
+ * @param status it will a bool that will define for active user or not
  * @returns we will return a array of users that active,not or both
  */
-async function fetchUsersByStatus(client_id,status = null) {
+async function fetchUsersByStatus(client_id, status = null) {
   let whereClause = "";
-  if (status === true) whereClause = "WHERE u.active=true";
-  else if (status === false) whereClause = "WHERE u.active=false";
+  if (status === true) whereClause = "AND u.active=true";
+  else if (status === false) whereClause = "AND u.active=false";
 
   const query = `
-    SELECT u.first_name,u.last_name,u.email,u.mobile_no,a.app_name,u.active
-    FROM user u
+    SELECT u.id,u.first_name,u.last_name,u.email,a.id AS "app_id",u.mobile_no,a.app_name,u.active
+    FROM user_schema.user u
     JOIN client_schema."App" a ON u.app_id=a.id
-    WHERE a.client_id=${client_id}
-    ${whereClause};
+    WHERE a.client_id=${client_id} ${whereClause};
+  `;
+  return pool.query(query);
+}
+
+/**
+ *
+ * @param client_id it will a int that will define for client id
+ * @param status it will a bool that will define for active user or not
+ * @returns we will return a array of users that active,not or both
+ */
+async function fetchAllUnbannedUsers(client_id) {
+  const query = `
+    SELECT u.id,u.first_name,u.last_name,u.email,u.mobile_no,a.id AS "app_id",a.app_name,u.active
+    FROM user_schema.user u
+    JOIN client_schema."App" a ON u.app_id=a.id
+    WHERE a.client_id=${client_id} AND u.id NOT IN (
+      SELECT ub.user_id
+      FROM user_schema.user_blacklist ub
+      JOIN client_schema."App" a2 ON ub.app_id=a2.id
+      WHERE a2.client_id=${client_id}
+    );
   `;
   return pool.query(query);
 }

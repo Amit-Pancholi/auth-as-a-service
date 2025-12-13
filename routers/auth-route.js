@@ -1,10 +1,22 @@
 const express = require("express");
-const controller = require("../controllers/auth-controller");
-// const auth = require("../middlewares/jwt-decoder");
-const authRoute = express.Router();
+const router = express.Router();
+const authController = require("../controllers/auth-controller");
+const userAccess = require('../middlewares/user-access')
+const userUpdate = require('../middlewares/user-update')
+// =======================
+// Authentication Routes
+// =======================
 
-authRoute.post("/signUp", controller.postSignUp);
-authRoute.post("/login", controller.postLogin);
-authRoute.post("/logOut", controller.postLogOut);
+// ✅ User Signup
+// Header: { app_id, client_id}
+router.post("/signup/:token",userAccess, authController.postSignUp);
 
-module.exports = authRoute;
+// ✅ User Login
+// Header: { app_id,client_id}
+router.post("/login/:token",userAccess, authController.postLogin);
+
+// ✅ User Logout
+// Header: { Authorization: "Bearer <token>" }
+router.post("/logout",userUpdate, authController.postLogOut);
+
+module.exports = router;

@@ -1,9 +1,12 @@
 const { check, validationResult } = require("express-validator");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const Response = require('../utils/response-handler')
+// const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const Response = require("../utils/response-handler");
+// const user_url = process.env.USER_SERVICE_URL;
+const token_url = process.env.TOKEN_SERVICE_URL;
+// const rbac_url = process.env.RBAC_SERVICE_URL;
 
 // pass app_id through token in head and we will pass client jwt secret in head also
 // ========== SIGNUP ==========
@@ -13,7 +16,7 @@ exports.postSignUp = [
     .notEmpty()
     .withMessage("Please enter first name")
     .isLength({
-      min: 5,
+      min: 1,
     })
     .withMessage("First name must be at least 5 characters long")
     .matches(/^[a-zA-Z\s]+$/)
@@ -65,28 +68,39 @@ exports.postSignUp = [
       return true;
     }),
   (req, res, next) => {
-    const error = validationResult(req);
-    if (!error.isEmpty()) {
-      return res.status(400).json({
-        status: "failure",
-        Message: "Error occure in sending data",
-        error: error.array().map((err) => err.msg),
-      });
-    } else {
-      next();
+    try {
+      const error = validationResult(req);
+      if (!error.isEmpty()) {
+        return res
+          .status(400)
+          .json(
+            new Response(
+              400,
+              null,
+              "Error sending data " + error.array().map((err) => err.msg)
+            )
+          );
+      } else {
+        next();
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
     }
   },
   async (req, res, next) => {
     try {
-      const { first_name, last_namee, email, mobile_no, password } = req.body;
-      const { app_id } = req.head;
-
+      const { first_name, last_name, email, mobile_no, password } = req.body;
+      const { client_id, app_id } = req.head;
+      // let app_id = 1;
+      // let client_id = 1;
       if (!first_name || !email || !mobile_no || !app_id || !password)
         return res
           .status(400)
           .json(new Response(400, null, "All fields are required"));
 
-      const existUser = await prisma.user.findMany({
+      const existUser = await prisma.user.findFirst({
         where: { email: email, app_id: app_id, active: true },
       });
       if (existUser)
@@ -95,45 +109,110 @@ exports.postSignUp = [
           .json(new Response(409, null, "user already exist"));
 
       const encryptPassword = await bcrypt.hash(password, 12);
-
       const user = await prisma.user.create({
         data: {
           first_name: first_name,
-          last_name: last_namee,
+          last_name: last_name,
           email: email,
           mobile_no: mobile_no,
           password: encryptPassword,
-          app_id:app_id
-        },
-      });
-      const token = jwt.sign(
-        {
-          first_name: first_name,
-          last_namee: last_namee,
-          email: email,
           app_id: app_id,
         },
-        req.head.secret,
-        { expiresIn: "1d" }
-      );
+      });
+
+      // call token service to genrate token
+      // const token = jwt.sign(
+      //   {
+      //     first_name: first_name,
+      //     last_name: last_name,
+      //     email: email,
+      //     app_id: app_id,
+      //   },
+      //   req.head.secret,
+      //   { expiresIn: "1d" }
+      // );
+      let token;
+      try {
+        token = await fetch(`${token_url}/api/AaaS/token/v1/user`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            client_id: client_id,
+            user_id: user.id,
+            app_id,
+          }),
+        });
+        // console.log(token)
+        if (!token.ok) {
+          let error = await token.json()
+          await prisma.user.delete({
+            where: {
+              id: user.id,
+            },
+          });
+          return res
+            .status(error.statusCode)
+            .json(new Response(error.statusCode, null, "Error token service "+ error.message));
+        }
+      } catch (err) {
+        await prisma.user.delete({
+          where: {
+            id: user.id,
+          },
+        });
+      return res
+        .status(500)
+        .json(new Response(500, null, "Internal server error " + err));
+      }
+      // console.log("hello");
+
+      const userToken = await token.json();
+      if (!userToken) {
+        await prisma.user.delete({
+          where: {
+            id: user.id,
+          },
+        });
+        return res
+          .status(503)
+          .json(new Response(503, null, "token service not work"));
+      }
+
+      const accessTokens = userToken?.data;
+
+      if (!accessTokens) {
+        await prisma.user.delete({
+          where: {
+            id: user.id,
+          },
+        });
+        return res
+          .status(501)
+          .json(new Response(501, null, "token not genrated"));
+      }
 
       // we need to develope the MFA for verifiy email and number(may be)
       return res.status(201).json(
-        new Response(201, {
-          token: token,
-          client: {
-            name: first_name + " " + last_namee,
-            email: email,
-            mobile_No: mobile_no,
-          }
-        },"user created")
+        new Response(
+          201,
+          {
+            token: accessTokens,
+            user: {
+              name: first_name + " " + last_name,
+              email: email,
+              mobile_no: mobile_no,
+            },
+          },
+          "user created"
+        )
       );
     } catch (error) {
-      return res.status(500).json({
-        status: "failure",
-        Message: "Error creating user",
-        error: error.message,
-      });
+      // console.log(error);
+      return res
+        .status(500)
+        .json(new Response(500, null, "Error creating user " + error));
     }
   },
 ];
@@ -153,26 +232,32 @@ exports.postLogin = [
     try {
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        return res.status(400).json({
-          stauts: "failure",
-          Message: "Validation failed",
-          error: error.array().map((err) => err.msg),
-        });
+        return res
+          .status(400)
+          .json(
+            new Response(
+              400,
+              null,
+              "Error sending data " + error.array().map((err) => err.msg)
+            )
+          );
       } else {
         next();
       }
-    } catch (error) {
-      return res.status(500).json({
-        status: "failure",
-        Message: "bad request",
-        error: error.message,
-      });
+    } catch (err) {
+      return res
+        .status(500)
+        .json(new Response(500, null, "Serverside error " + err));
     }
   },
   async (req, res, next) => {
     try {
       const { email, password } = req.body;
-      const {app_id,secret} = req.head
+      const { client_id, app_id } = req.head;
+      // let app_id = 1
+      // let client_id = 1
+
+      // console.log("hello");
 
       if (!email || !password)
         return res
@@ -180,10 +265,19 @@ exports.postLogin = [
           .json(new Response(400, null, "all field requried"));
 
       const user = await prisma.user.findFirst({
-        where: { email: email,app_id:app_id,active:true },
+        where: { email: email, app_id: app_id, active: true },
       });
       if (!user)
         return res.status(404).json(new Response(404, null, "User not found"));
+
+      const blacklistUser = await prisma.user_blacklist;
+      findFirst({
+        where: { user_id: user.id, app_id: app_id },
+      });
+      if (blacklistUser)
+        return res
+          .status(403)
+          .json(new Response(403, null, "user is banned,contact admin"));
 
       const validPassword = await bcrypt.compare(password, user.password);
 
@@ -191,38 +285,82 @@ exports.postLogin = [
         return res
           .status(400)
           .json(new Response(400, null, "user or password is wrong"));
-      const token = jwt.sign(
-        {
-          firstName: user.first_name,
-          lastName: user.last_name,
-          email: user.email,
-          app_id:app_id
-        },
-        secret,
-        { expiresIn: "1d" }
-      );
+      // call token service
+      // const token = jwt.sign(
+      //   {
+      //     firstName: user.first_name,
+      //     lastName: user.last_name,
+      //     email: user.email,
+      //     app_id: app_id,
+      //   },
+      //   secret,
+      //   { expiresIn: "1d" }
+      // );
+
+      let token;
+      try {
+        token = await fetch(`${token_url}/api/AaaS/token/v1/user`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            client_id: client_id,
+            user_id: user.id,
+            app_id,
+            app_id,
+          }),
+        });
+
+        if (!token.ok) {
+          let error = await token.json()
+          return res
+            .status(error.statusCode)
+            .json(new Response(error.statusCode, null, "Error token service "+error.message));
+        }
+      } catch (err) {
+        return res
+          .status(500)
+          .json(new Response(500, null, "Internal server error " + err));
+      }
+
+      const userToken = await token.json();
+      if (!userToken) {
+        return res
+          .status(503)
+          .json(new Response(503, null, "token service not work"));
+      }
+
+      const accessTokens = userToken?.data;
+
+      if (!accessTokens) {
+        return res
+          .status(501)
+          .json(new Response(501, null, "token not genrated"));
+      }
 
       return res.status(200).json(
-        new Response(200, {
-          token: token,
-          client: {
-            name: user.first_name + " " + user.last_name,
-            email: user.email,
-            app: user.app,
+        new Response(
+          200,
+          {
+            token: accessTokens,
+            user: {
+              name: user.first_name + " " + user.last_name,
+              email: user.email,
+              app: user?.app,
+            },
           },
-        },"user successfully login")
+          "user successfully login"
+        )
       );
     } catch (error) {
-      return res.status(500).json({
-        status: "failure",
-        Message: "Error login user",
-        error: error.message,
-      });
+      // console.log(error.message);
+      return res.status(500).json(new Response(500, null, "Error login user " + error));
     }
   },
 ];
 // improve it later
-// we will remove token from token service database or set that token into blacklist 
+// we will remove token from token service database or set that token into blacklist
 exports.postLogOut = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -242,11 +380,8 @@ exports.postLogOut = async (req, res, next) => {
       Message: "logout successfully",
     });
   } catch (error) {
-    return res.status(500).json({
-      status: "failure",
-      Message: "Error in user logout",
-      error: error.message,
-    });
+    return res
+      .status(500)
+      .json(new Response(500, null, "Error in user logout "+error));
   }
 };
-
