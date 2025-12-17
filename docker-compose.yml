@@ -1,0 +1,107 @@
+services:
+
+  # ---------------------------
+  # PostgreSQL
+  # ---------------------------
+  postgres:
+    image: postgres:15
+    container_name: local_postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # ---------------------------
+  # Client Service
+  # ---------------------------
+  client-service:
+    container_name: client-service
+    build: ./auth-service
+    env_file:
+      - .env
+    ports:
+      - "${CLIENT_PORT}:${CLIENT_PORT}"
+    environment:
+      PORT: ${CLIENT_PORT}
+      USER_SERVICE_URL: http://user-service:${USER_PORT}
+      TOKEN_SERVICE_URL: http://token-service:${TOKEN_PORT}
+      RBAC_SERVICE_URL: http://rbac-service:${RBAC_PORT}
+      DATABASE_URL: ${CLIENT_DATABASE_URL}
+      JWT_CLIENT_SECRET: ${JWT_CLIENT_SECRET}
+      JWT_URL_SECRET: ${JWT_URL_SECRET}
+    depends_on:
+      - postgres
+      - user-service
+      - token-service
+      - rbac-service
+
+  # ---------------------------
+  # User Service
+  # ---------------------------
+  user-service:
+    container_name: user-service
+    build: ./user-service
+    env_file:
+      - .env
+    ports:
+      - "${USER_PORT}:${USER_PORT}"
+    environment:
+      PORT: ${USER_PORT}
+      TOKEN_SERVICE_URL: http://token-service:${TOKEN_PORT}
+      RBAC_SERVICE_URL: http://rbac-service:${RBAC_PORT}
+      DATABASE_URL: ${USER_DATABASE_URL}
+      JWT_CLIENT_SECRET: ${JWT_CLIENT_SECRET}
+      JWT_URL_SECRET: ${JWT_URL_SECRET}
+    depends_on:
+      - postgres
+
+  # ---------------------------
+  # Token Service
+  # ---------------------------
+  token-service:
+    container_name: token-service
+    build: ./token-service
+    env_file:
+      - .env
+    ports:
+      - "${TOKEN_PORT}:${TOKEN_PORT}"
+    environment:
+      PORT: ${TOKEN_PORT}
+      USER_SERVICE_URL: http://user-service:${USER_PORT}
+      DATABASE_URL: ${TOKEN_DATABASE_URL}
+      JWT_CLIENT_SECRET: ${JWT_CLIENT_SECRET}
+    depends_on:
+      - postgres
+
+  # ---------------------------
+  # RBAC Service
+  # ---------------------------
+  rbac-service:
+    container_name: rbac-service
+    build: ./rbac-service
+    env_file:
+      - .env
+    ports:
+      - "${RBAC_PORT}:${RBAC_PORT}"
+    environment:
+      PORT: ${RBAC_PORT}
+      USER_SERVICE_URL: http://user-service:${USER_PORT}
+      TOKEN_SERVICE_URL: http://token-service:${TOKEN_PORT}
+      DATABASE_URL: ${RBAC_DATABASE_URL}
+      JWT_CLIENT_SECRET: ${JWT_CLIENT_SECRET}
+    depends_on:
+      - postgres
+
+networks:
+  default:
+    name: microservices-net
+
+volumes:
+  postgres_data:
