@@ -1,0 +1,211 @@
+<%- include("../parties/head", { title: "Tokens" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV BAR -->
+        <%- include('../parties/nav.ejs',{title:activeSide}) %>
+
+            <div class="flex w-full gap-6">
+
+                <!-- LEFT SIDEBAR -->
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:activeSide}) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1">
+
+                        <h1 class="text-3xl font-bold text-green-400 mb-6 mt-6">Active Token Users</h1>
+
+                        <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 overflow-x-auto">
+
+                            <table class="min-w-full text-left text-gray-100">
+
+                                <thead class="bg-gray-800">
+                                    <tr>
+                                        <th class="p-4 font-semibold">User</th>
+                                        <th class="p-4 font-semibold">Email</th>
+                                        <th class="p-4 font-semibold">App</th>
+                                        <th class="p-4 font-semibold">Access Token</th>
+                                        <th class="p-4 font-semibold">Refresh Token</th>
+                                        <th class="p-4 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <% tokens.forEach(t=> { %>
+
+                                        <% const email=t.email; const maskedEmail=email.substring(0,3) + "*****@" +
+                                            email.split("@")[1]; const maskAccess=t.access_token.substring(0,8)
+                                            + "************" ; const maskRefresh=t.refresh_token.substring(0,8)
+                                            + "************" ; %>
+
+                                            <tr class="border-b border-gray-700 hover:bg-gray-900">
+
+                                                <td class="p-4">
+                                                    <%= t.first_name %>
+                                                        <%= t.last_name %>
+                                                </td>
+
+                                                <td class="p-4">
+                                                    <%= maskedEmail %>
+                                                </td>
+
+                                                <td class="p-4">
+                                                    <%= t.app_name %>
+                                                </td>
+
+                                                <td class="p-4 text-yellow-400">
+                                                    <%= maskAccess %>
+                                                </td>
+
+                                                <td class="p-4 text-blue-400">
+                                                    <%= maskRefresh %>
+                                                </td>
+
+                                                <td class="p-4 flex gap-3">
+
+                                                    <!-- VIEW FULL TOKEN -->
+                                                    <button onclick="openTokenModal(
+                                        '<%= t.first_name %>',
+                                        '<%= t.last_name %>',
+                                        '<%= email %>',
+                                        '<%= t.app_name %>',
+                                        '<%= t.access_token %>',
+                                        '<%= t.refresh_token %>'
+                                    )" class="border border-green-500 text-green-400 px-4 py-1 rounded-md tech-font hover:bg-green-900/20 hover:border-green-400">
+                                                        ./view
+                                                    </button>
+
+                                                    <!-- FORCE LOGOUT -->
+                                                    <form action="/dashboard/Tokens/force-logout" method="POST"
+                                                        onClick="event.stopPropagation();">
+
+                                                        <input type="hidden" name="token_id" value="<%= t.id %>">
+
+                                                        <button type="submit" class="border border-red-500 text-red-400 px-4 py-1 rounded-md tech-font
+                                                hover:bg-red-900/20 hover:border-red-400 transition">
+                                                            ./force_logout
+                                                        </button>
+                                                    </form>
+
+                                                </td>
+
+                                            </tr>
+
+                                            <% }) %>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </main>
+
+            </div>
+
+
+
+            <!-- ===================================== -->
+            <!--      TOKEN DETAILS MODAL              -->
+            <!-- ===================================== -->
+
+            <div id="tokenModal" class="fixed inset-0 bg-black/70 hidden z-50 flex justify-center items-center">
+
+                <div class="bg-[#161b22] p-8 rounded-2xl border border-gray-700 w-full max-w-lg shadow-xl">
+
+                    <h2 class="text-2xl font-semibold text-green-400 mb-6 tech-font">Token Details</h2>
+
+                    <div class="space-y-5">
+
+                        <div>
+                            <label class="block text-green-400 tech-font">User</label>
+                            <input id="tmUser" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Email</label>
+                            <input id="tmEmail" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">App</label>
+                            <input id="tmApp" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Access Token</label>
+                            <div class="flex items-center bg-gray-800 border border-gray-700 rounded px-2">
+                                <input id="tmAccess" readonly class="w-full bg-transparent px-2 py-2 text-gray-200">
+                                <button onclick="copyField('tmAccess')"
+                                    class="text-blue-400 hover:text-blue-300 px-2">Copy</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Refresh Token</label>
+                            <div class="flex items-center bg-gray-800 border border-gray-700 rounded px-2">
+                                <input id="tmRefresh" readonly class="w-full bg-transparent px-2 py-2 text-gray-200">
+                                <button onclick="copyField('tmRefresh')"
+                                    class="text-blue-400 hover:text-blue-300 px-2">Copy</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="flex justify-end mt-6">
+                        <button onclick="closeTokenModal()"
+                            class="border border-gray-500 text-gray-300 px-4 py-1.5 rounded-md tech-font hover:bg-gray-700 hover:border-gray-400">
+                            ./close
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===================================== -->
+            <!--               SCRIPT                  -->
+            <!-- ===================================== -->
+
+            <script>
+
+                function openTokenModal(first, last, email, app, access, refresh) {
+                    document.getElementById("tmUser").value = first + " " + last;
+                    document.getElementById("tmEmail").value = email;
+                    document.getElementById("tmApp").value = app;
+                    document.getElementById("tmAccess").value = access;
+                    document.getElementById("tmRefresh").value = refresh;
+
+                    document.getElementById("tokenModal").classList.remove("hidden");
+                }
+
+                function closeTokenModal() {
+                    document.getElementById("tokenModal").classList.add("hidden");
+                }
+
+                function copyField(id) {
+                    navigator.clipboard.writeText(document.getElementById(id).value);
+                }
+
+            </script>
+
+    </body>
+
+    </html>

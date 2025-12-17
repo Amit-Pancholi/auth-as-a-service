@@ -1,0 +1,384 @@
+<%- include("../parties/head", { title: "Users" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+
+        /* small helper to avoid table buttons being too wide */
+        .action-btn {
+            white-space: nowrap;
+        }
+    </style>
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV -->
+        <%- include('../parties/nav.ejs',{title:activeSide}) %>
+
+            <div class="flex w-full gap-6">
+
+                <!-- SIDE NAV -->
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:activeSide}) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1 space-y-6 p-6">
+
+                        <!-- HEADER -->
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-green-400">Users</h1>
+
+                            <a href="/dashboard/Users/banned" class="border border-red-500/50 text-red-400 px-4 py-1.5 rounded-md tech-font
+                              hover:bg-red-900/20 hover:border-red-400 transition-all">
+                                ./banned_users
+                            </a>
+                        </div>
+
+                        <!-- FILTER -->
+                        <div class="flex gap-4 mt-4 mb-6">
+                            <select id="statusFilter" class="bg-gray-800 border border-gray-700 rounded px-4 py-2
+                               focus:outline-none focus:border-green-400">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="deactive">Deactive</option>
+                            </select>
+                        </div>
+
+                        <!-- USERS TABLE -->
+                        <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 overflow-x-auto">
+                            <table class="min-w-full text-left text-gray-100">
+                                <thead class="bg-gray-800">
+                                    <tr>
+                                        <th class="p-4 font-semibold">Name</th>
+                                        <th class="p-4 font-semibold">Email</th>
+                                        <th class="p-4 font-semibold">Mobile</th>
+                                        <th class="p-4 font-semibold">App</th>
+                                        <th class="p-4 font-semibold">Status</th>
+                                        <th class="p-4 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="usersTable">
+                                    <% users.forEach(user=> { %>
+                                        <tr class="border-b border-gray-700 hover:bg-gray-900"
+                                            data-user-id="<%= user.id %>" data-first="<%= user.first_name %>"
+                                            data-last="<%= user.last_name %>" data-email="<%= user.email %>"
+                                            data-mobile="<%= user.mobile_no %>" data-app-id="<%= user.app_id %>"
+                                            data-app-name="<%= user.app_name %>" data-active="<%= !!user.active %>">
+
+                                            <!-- CLICKABLE CELLS -->
+                                            <td class="p-4 hover:text-green-400 cursor-pointer"
+                                                onclick="openUserModalFromRow(this.closest('tr'))">
+                                                <%= user.first_name %>
+                                                    <%= user.last_name %>
+                                            </td>
+
+                                            <td class="p-4 cursor-pointer"
+                                                onclick="openUserModalFromRow(this.closest('tr'))">
+                                                <%= user.email %>
+                                            </td>
+
+                                            <td class="p-4 cursor-pointer"
+                                                onclick="openUserModalFromRow(this.closest('tr'))">
+                                                <%= user.mobile_no %>
+                                            </td>
+
+                                            <td class="p-4 cursor-pointer"
+                                                onclick="openUserModalFromRow(this.closest('tr'))">
+                                                <%= user.app_name %>
+                                            </td>
+
+                                            <td class="p-4 capitalize cursor-pointer"
+                                                onclick="openUserModalFromRow(this.closest('tr'))">
+                                                <% if (user.active) { %>
+                                                    <span class="text-green-400">active</span>
+                                                    <% } else { %>
+                                                        <span class="text-red-400">deactive</span>
+                                                        <% } %>
+                                            </td>
+
+                                            <!-- ACTIONS: assign btn in row only (per your Option 3) -->
+                                            <td class="p-4 flex gap-2">
+                                                <button class="action-btn border border-yellow-500 text-yellow-400 px-4 py-1 rounded tech-font
+                                                    hover:bg-yellow-900/20 hover:border-yellow-400 transition"
+                                                    onclick="event.stopPropagation(); openAssignRoleModal('<%= user.id %>','<%= user.app_id %>')">
+                                                    ./assign
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </main>
+            </div>
+
+            <!-- ================= USER DETAILS MODAL ================= -->
+            <div id="userModal" class="fixed inset-0 bg-black/70 flex justify-center items-center hidden z-50">
+                <div class="bg-[#161b22] p-8 rounded-2xl border border-gray-700 w-full max-w-lg shadow-2xl">
+                    <h2 class="text-2xl font-semibold text-green-400 mb-6 tech-font">User Details</h2>
+
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-green-400 tech-font">Full Name</label>
+                            <input id="modalName" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Email</label>
+                            <input id="modalEmail" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Mobile</label>
+                            <input id="modalMobile" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">App</label>
+                            <input id="modalApp" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Status</label>
+                            <input id="modalStatus" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields for actions -->
+                    <input type="hidden" id="selectedUserId">
+                    <input type="hidden" id="selectedAppId">
+
+                    <div class="flex justify-between mt-6">
+                        <button onclick="closeUserModal()"
+                            class="border border-gray-500 text-gray-300 px-4 py-1.5 rounded-md tech-font hover:bg-gray-700 hover:border-gray-400">
+                            ./close
+                        </button>
+
+                        <div class="flex gap-3">
+                            <!-- Assign role can also be triggered from modal if needed -->
+                            <!-- <button id="modalAssignBtn" onclick="openAssignRoleModalFromModal()"
+                                class="border border-yellow-500 text-yellow-400 px-4 py-1.5 rounded-md tech-font hover:bg-yellow-900/20 hover:border-yellow-400">
+                                ./assign_role
+                            </button> -->
+
+                            <!-- Ban/Unban (only here) -->
+                            <button id="banButton" onclick="submitBanForm()"
+                                class="border px-4 py-1.5 rounded-md tech-font">
+                                <!-- text set dynamically -->
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= ASSIGN ROLE MODAL ================= -->
+            <div id="assignRoleModal" class="fixed inset-0 bg-black/70 hidden z-50 flex justify-center items-center">
+                <div class="bg-[#161b22] p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
+                    <h2 class="text-xl text-yellow-400 mb-4 tech-font">Assign Role</h2>
+
+                    <input type="hidden" id="assignUserId">
+                    <input type="hidden" id="assignAppId">
+
+                    <label class="text-green-400 tech-font mb-2">Select Role</label>
+                    <select id="roleDropdown"
+                        class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 mb-6 text-gray-200">
+                        <option>Loading...</option>
+                    </select>
+
+                    <div class="flex justify-between">
+                        <button onclick="closeAssignRoleModal()"
+                            class="border border-gray-500 text-gray-300 px-4 py-1.5 rounded-md hover:bg-gray-700 hover:border-gray-400 tech-font">
+                            ./close
+                        </button>
+
+                        <button onclick="assignRoleNow()"
+                            class="border border-yellow-500 text-yellow-400 px-4 py-1.5 rounded-md hover:bg-yellow-900/20 hover:border-yellow-400 tech-font">
+                            ./assign
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TOAST (non blocking) ================= -->
+            <div id="smallToast"
+                class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#0d1117] text-green-400 border border-green-500/60 px-4 py-2 rounded-xl shadow-lg text-sm font-semibold opacity-0 transition-opacity duration-300 pointer-events-none">
+                Done ✔
+            </div>
+
+            <!-- ================= JAVASCRIPT ================= -->
+            <script>
+                // Filter behaviour
+                document.getElementById('statusFilter').addEventListener('change', function () {
+                    const val = this.value;
+                    document.querySelectorAll('#usersTable tr').forEach(row => {
+                        const statusText = row.cells[4].innerText.trim().toLowerCase();
+                        row.style.display = (val === 'all' || val === statusText) ? '' : 'none';
+                    });
+                });
+
+                // open user modal given a <tr> element
+                function openUserModalFromRow(row) {
+                    // if caller passed an event element (like td), ensure we have the tr
+                    if (!row || row.tagName !== 'TR') row = row.closest('tr');
+
+                    const id = row.dataset.userId;
+                    const first = row.dataset.first;
+                    const last = row.dataset.last;
+                    const email = row.dataset.email;
+                    const mobile = row.dataset.mobile;
+                    const appName = row.dataset.appName;
+                    const appId = row.dataset.appId;
+                    const active = (row.dataset.active === 'true');
+
+                    document.getElementById('modalName').value = `${first} ${last}`;
+                    document.getElementById('modalEmail').value = email;
+                    document.getElementById('modalMobile').value = mobile;
+                    document.getElementById('modalApp').value = appName;
+                    document.getElementById('modalStatus').value = active ? 'Active' : 'Deactive';
+
+                    document.getElementById('selectedUserId').value = id;
+                    document.getElementById('selectedAppId').value = appId;
+
+                    // configure ban/unban button
+                    const btn = document.getElementById('banButton');
+                    if (active) {
+                        btn.textContent = './ban_user';
+                        btn.dataset.action = 'ban';
+                        btn.className = 'border border-red-500 text-red-400 px-4 py-1.5 rounded-md tech-font hover:bg-red-900/20 hover:border-red-400';
+                    } else {
+                        btn.textContent = './unban_user';
+                        btn.dataset.action = 'unban';
+                        btn.className = 'border border-green-500 text-green-400 px-4 py-1.5 rounded-md tech-font hover:bg-green-900/20 hover:border-green-400';
+                    }
+
+                    document.getElementById('userModal').classList.remove('hidden');
+                }
+
+                function closeUserModal() {
+                    document.getElementById('userModal').classList.add('hidden');
+                }
+
+                // Ban / Unban - sends user_id and app_id
+                function submitBanForm() {
+                    const action = document.getElementById('banButton').dataset.action;
+                    const user_id = document.getElementById('selectedUserId').value;
+                    const app_id = document.getElementById('selectedAppId').value;
+
+                    // build a form and submit to server to keep flow server-side
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = action === 'ban' ? '/dashboard/Users/ban' : '/dashboard/Users/unban';
+
+                    const u = document.createElement('input');
+                    u.type = 'hidden'; u.name = 'user_id'; u.value = user_id;
+                    const a = document.createElement('input');
+                    a.type = 'hidden'; a.name = 'app_id'; a.value = app_id;
+
+                    form.appendChild(u); form.appendChild(a);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+
+                // OPEN assign modal from row-button (this is the per-row assign button)
+                async function openAssignRoleModal(user_id, app_id) {
+                    document.getElementById('assignUserId').value = user_id;
+                    document.getElementById('assignAppId').value = app_id;
+
+                    const dd = document.getElementById('roleDropdown');
+                    dd.innerHTML = '<option>Loading...</option>';
+
+                    try {
+                        const res = await fetch('/dashboard/Roles/get-by-app', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ app_id })
+                        });
+
+                        if (!res.ok) throw new Error('Failed to load roles');
+                        // console.log('Fetched roles for app_id:', app_id,res);
+                        const roles = await res.json();
+                        // console.log(roles);
+                        dd.innerHTML = '';
+                        if (!roles || roles.length === 0) {
+                            dd.innerHTML = '<option disabled>No roles</option>';
+                        } else {
+                            roles.forEach(r => {
+                                dd.insertAdjacentHTML('beforeend', `<option value="${r.id}">${r.name}</option>`);
+                            });
+                        }
+                    } catch (err) {
+                        dd.innerHTML = '<option disabled>Error loading roles</option>';
+                    }
+
+                    document.getElementById('assignRoleModal').classList.remove('hidden');
+                }
+
+                // OPEN assign modal from inside user modal
+                function openAssignRoleModalFromModal() {
+                    const user_id = document.getElementById('selectedUserId').value;
+                    const app_id = document.getElementById('selectedAppId').value;
+                    openAssignRoleModal(user_id, app_id);
+                }
+
+                function closeAssignRoleModal() {
+                    document.getElementById('assignRoleModal').classList.add('hidden');
+                }
+
+                // assign selected role to user -> posts user_id, app_id, role_id
+                function assignRoleNow() {
+                    const user_id = document.getElementById('assignUserId').value;
+                    const app_id = document.getElementById('assignAppId').value;
+                    const role_id = document.getElementById('roleDropdown').value;
+
+                    if (!role_id) {
+                        showToast('Select a role first');
+                        return;
+                    }
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/dashboard/Roles/assign';
+
+                    form.innerHTML = `
+                        <input type="hidden" name="user_id" value="${user_id}">
+                        <input type="hidden" name="app_id" value="${app_id}">
+                        <input type="hidden" name="role_id" value="${role_id}">
+                    `;
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+
+                // small toast helper
+                function showToast(text = 'Done') {
+                    const t = document.getElementById('smallToast');
+                    t.textContent = text;
+                    t.classList.remove('opacity-0');
+                    setTimeout(() => t.classList.add('opacity-0'), 1400);
+                }
+
+                // hide modals on Escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        closeUserModal();
+                        closeAssignRoleModal();
+                    }
+                });
+            </script>
+
+    </body>
+
+    </html>

@@ -1,0 +1,204 @@
+<%- include('parties/head.ejs') %>
+</head>
+
+<body class="min-h-screen bg-[#030814] text-green-300 p-4">
+
+    <!-- ================= NAV ================= -->
+
+<%- include('parties/nav.ejs') %>
+
+    <!-- ================= INTRO SECTION ================= -->
+    <section class="w-full mb-10">
+        <h1 class="text-3xl tech-font text-cyan-300 font-bold mb-3">AaaS Identity Platform</h1>
+
+        <p class="leading-relaxed text-gray-300">
+            AaaS is an enterprise-grade Identity & Access Management platform built on microservices,
+            delivering high-speed authentication, secure authorization, and complete data ownership.
+        </p>
+
+        <p class="leading-relaxed text-gray-300 mt-4">
+            Our mission is to replace expensive third-party identity providers with a fully internal,
+            powerful, transparent, and developer-friendly system — optimized for performance,
+            observability, and high availability.
+        </p>
+    </section>
+
+<!-- ================= CLIENT INTEGRATION (TERMINAL LEFT, DRACULA) ================= -->
+<section class="mt-16">
+
+    <h2 class="text-3xl tech-font text-purple-300 mb-8">How Clients Integrate With Our Service</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+
+        <!-- TERMINAL LEFT -->
+        <div class="bg-[#1E1F29] border border-[#BD93F9]/50 rounded-lg p-5 shadow-lg">
+
+            <div class="text-[#BD93F9] mb-4 tech-font">
+                <span class="text-[#8BE9FD]">terminal</span>:~$
+                <span class="text-[#50FA7B]">client.request.handler</span>
+            </div>
+
+            <div class="pl-4 border-l border-[#BD93F9]/40 space-y-6 text-sm text-gray-200">
+
+                <!-- LOGIN -->
+                <div>
+                    <p class="text-[#50FA7B] font-bold"># LOGIN</p>
+                    <pre class="whitespace-pre-wrap">
+fetch(`${API_URL}?action=login`, {
+  method: "POST",
+  headers: { "Authorization": `Bearer ${TOKEN}` },
+  body: JSON.stringify({ email, password })
+});
+</pre>
+                </div>
+
+                <!-- SIGNUP -->
+                <div>
+                    <p class="text-[#FF79C6] font-bold"># SIGNUP</p>
+                    <pre class="whitespace-pre-wrap">
+fetch(`${API_URL}?action=signup`, {
+  method: "POST",
+  headers: { "Authorization": `Bearer ${TOKEN}` },
+  body: JSON.stringify({ email, pass })
+});
+</pre>
+                </div>
+
+                <!-- LOGOUT -->
+                <div>
+                    <p class="text-[#F1FA8C] font-bold"># LOGOUT</p>
+                    <pre class="whitespace-pre-wrap">
+fetch(`${API_URL}?action=logout`, {
+  method: "POST",
+  headers: { "Authorization": `Bearer ${TOKEN}` }
+});
+</pre>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- TEXT RIGHT -->
+        <div class="space-y-4 text-gray-300">
+
+            <p>
+                Clients interact with the identity gateway through a secure endpoint.
+                Each client receives:
+            </p>
+
+            <ul class="list-disc pl-6 space-y-1 text-cyan-300">
+                <li>A unique <span class="text-green-300">API URL</span></li>
+                <li>A <span class="text-green-300">JWT Token</span> for authentication</li>
+            </ul>
+
+            <p>
+                Every request includes a required <span class="text-purple-300 font-bold">action</span> parameter:
+            </p>
+
+            <ul class="list-disc pl-6 space-y-1 text-gray-200">
+                <li><span class="text-green-300">action=login</span> — authenticate user</li>
+                <li><span class="text-green-300">action=signup</span> — create account</li>
+                <li><span class="text-green-300">action=logout</span> — end session</li>
+            </ul>
+
+            <p>
+                Our gateway validates JWT tokens, checks RBAC policy, processes the request,
+                and forwards it to the correct microservice.
+                Clients never directly contact internal services.
+            </p>
+
+            <p class="text-red-400">
+                ⚠ Invalid or missing tokens trigger immediate rejection.
+            </p>
+
+        </div>
+    </div>
+</section>
+
+    <!-- ================= KEY FEATURES + TERMINAL (TERMINAL RIGHT) ================= -->
+    <section class="mt-14">
+        <h2 class="text-2xl tech-font text-purple-300 mb-6">Key Features</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+            <!-- LEFT SIDE = TEXT -->
+            <div class="space-y-4 text-gray-300 leading-relaxed">
+
+                <p><span class="text-green-400">✔ Microservices Architecture:</span>
+                    Components like Auth, RBAC, Tokens, Audit, and Users run independently and scale horizontally.</p>
+
+                <p><span class="text-green-400">✔ Secure Authentication:</span>
+                    Supports OAuth2, OIDC, MFA/2FA, session rotation, and brute-force protection.</p>
+
+                <p><span class="text-green-400">✔ Dynamic RBAC:</span>
+                    Permissions update instantly without restarts. Roles map dynamically to each API layer.</p>
+
+                <p><span class="text-green-400">✔ Deployment Ready:</span>
+                    Fully Kubernetes-compatible with autoscaling, Redis/RabbitMQ caching, and rolling updates.</p>
+
+                <p><span class="text-green-400">✔ Enterprise Logging:</span>
+                    Logs token refreshes, permission changes, suspicious activity, and system health.</p>
+
+                <p><span class="text-green-400">✔ Privacy & Data Ownership:</span>
+                    No third-party dependency. All identity data stays inside your infrastructure.</p>
+
+            </div>
+
+            <!-- RIGHT SIDE = DRACULA TERMINAL -->
+            <div class="bg-[#1E1F29] border border-[#BD93F9]/50 rounded-lg p-5 shadow-lg">
+
+                <div class="text-[#BD93F9] mb-4 tech-font">
+                    <span class="text-[#8BE9FD]">terminal</span>:~$
+                    <span class="text-[#50FA7B]">system.diagnostics</span>
+                </div>
+
+                <div class="pl-4 border-l border-[#BD93F9]/40 space-y-2 text-gray-200">
+
+                    <p class="text-[#50FA7B]">✔ Auth Service: online (23ms)</p>
+                    <p class="text-[#50FA7B]">✔ Token Engine: rotating keys active</p>
+                    <p class="text-[#50FA7B]">✔ RBAC Core: policies synced</p>
+                    <p class="text-[#50FA7B]">✔ User Directory: live</p>
+                    <p class="text-[#FF5555]">⚠ Audit Log Service: high latency</p>
+
+                    <p class="mt-3">Sessions Active: <span class="text-[#F1FA8C]">142</span></p>
+                    <p>Pending Requests: <span class="text-[#F1FA8C]">37</span></p>
+                    <p>Token Cache Hits: <span class="text-[#F1FA8C]">98%</span></p>
+
+                    <p class="mt-3">Last Sync: <span class="text-[#8BE9FD]">45 sec ago</span></p>
+                    <p>Uptime: <span class="text-[#8BE9FD]">18h 12m</span></p>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+
+    <!-- ================= SYSTEM OVERVIEW ================= -->
+    <section class="mt-14">
+        <h2 class="text-2xl tech-font text-cyan-300 mb-3">System Overview</h2>
+
+        <p class="text-gray-300 leading-relaxed">
+            We follow Defense-in-Depth security practices with automated code scanning,
+            dependency audits, mTLS internal communication, and strict configuration management.
+        </p>
+
+        <p class="text-gray-300 leading-relaxed mt-3">
+            Databases use rotating credentials, encrypted storage, PITR backups, and
+            multi-region replication. All API actions get logged into a tamper-proof audit pipeline.
+        </p>
+
+        <p class="text-red-400 mt-4">
+            ⚠ Unauthorized access attempts trigger rate-limits, auto-blocking, and central alerts.
+        </p>
+    </section>
+
+
+
+
+   
+</body>
+
+</html>

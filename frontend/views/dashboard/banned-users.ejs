@@ -1,0 +1,117 @@
+<%- include("../parties/head", { title: "Banned Users" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV -->
+        <%- include('../parties/nav.ejs',{title:activeSide}) %>
+
+            <div class="flex w-full gap-6">
+
+                <!-- SIDE NAV -->
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:activeSide}) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1 space-y-8 p-4">
+
+                        <!-- HEADER -->
+                        <div class="flex justify-between items-center mt-4 mb-6">
+                            <h1 class="text-3xl font-bold text-green-400">Banned Users</h1>
+
+                            <a href="/dashboard/Users" class="border border-blue-400/50 text-blue-300 px-4 py-1.5 rounded-md tech-font
+                       hover:bg-blue-900/20 hover:border-blue-400 transition-all">
+                                ./back
+                            </a>
+                        </div>
+
+                        <!-- TABLE CARD -->
+                        <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 shadow-lg overflow-x-auto">
+
+                            <table class="min-w-full text-left text-gray-100">
+                                <thead class="bg-gray-800">
+                                    <tr>
+                                        <!-- <th class="p-4 font-semibold">ID</th> -->
+                                        <th class="p-4 font-semibold">Name</th>
+                                        <th class="p-4 font-semibold">Email</th>
+                                        <th class="p-4 font-semibold">Mobile No</th>
+                                        <th class="p-4 font-semibold">App</th>
+                                        <th class="p-4 font-semibold">Status</th>
+                                        <th class="p-4 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <% bannedUsers.forEach(user=> { %>
+
+                                        <tr class="border-b border-gray-700 hover:bg-gray-900">
+
+                                            <!-- ID -->
+                                            <!-- NAME -->
+                                            <td class="p-4">
+                                                <%= user.first_name + " " + user.last_name %>
+                                            </td>
+
+                                            <!-- EMAIL -->
+                                            <td class="p-4">
+                                                <%= user.email %>
+                                            </td>
+
+                                            <!-- MOBILE -->
+                                            <td class="p-4">
+                                                <%= user.mobile_no %>
+                                            </td>
+
+                                            <!-- APP NAME -->
+                                            <td class="p-4">
+                                                <%= user.app_name %>
+                                            </td>
+
+                                            <!-- STATUS -->
+                                            <td class="p-4 capitalize text-red-400">
+                                                <%= user.active ? "active" : "deactive" %>
+                                            </td>
+
+                                            <!-- ACTIONS -->
+                                            <td class="p-4">
+
+                                                <!-- UNBAN POST FORM -->
+                                                <form action="/dashboard/Users/unban" method="POST">
+
+                                                    <!-- Important hidden fields -->
+                                                    <input type="hidden" name="user_id" value="<%= user.id %>">
+                                                    <input type="hidden" name="app_id" value="<%= user.app_id %>">
+
+                                                    <button type="submit"
+                                                        class="bg-green-500 hover:bg-green-600 px-4 py-1 rounded text-white font-semibold">
+                                                        Unban
+                                                    </button>
+                                                </form>
+
+                                            </td>
+
+                                        </tr>
+
+                                        <% }) %>
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </main>
+            </div>
+
+    </body>
+
+    </html>

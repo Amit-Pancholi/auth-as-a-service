@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" class="font-mono">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Server Status</title>
+
+    <!-- Tailwind -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        .tech-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-[#030814] text-green-300 p-6">
+
+    <!-- ================= NAV ================= -->
+    <nav class="w-full flex justify-between items-center
+                backdrop-blur-sm bg-white/5 rounded-lg
+                border border-blue-400/30 px-4 py-2 mb-10">
+
+        <div class="text-lg tech-font">
+            <span class="text-green-400 font-bold">root@AaaS</span>
+            <span class="text-blue-400">:~$</span>
+            <span class="text-red-400">./status</span>
+        </div>
+
+        <div class="space-x-3">
+            <a href="/login" class="px-3 py-1 border border-green-400 text-green-300 
+                       rounded hover:bg-green-800/20 transition">./login</a>
+
+            <a href="/signup" class="px-3 py-1 border border-blue-400 text-blue-300 
+                       rounded hover:bg-blue-800/20 transition">./signup</a>
+        </div>
+    </nav>
+
+    <!-- ================= MAIN ERROR SECTION ================= -->
+    <div class="flex flex-col items-center justify-center text-center">
+
+        <!-- ========== ERROR / SUCCESS CODE ========== -->
+        <h1 class="text-6xl font-bold tech-font 
+            <%= type === 'success' ? 'text-green-400' : 'text-red-500' %> mb-3">
+            <%= errorCode %>
+        </h1>
+
+        <!-- ========== TYPE MESSAGE ========== -->
+        <h2 class="text-2xl tech-font mb-2 
+            <%= type === 'success' ? 'text-green-300' : 'text-red-400' %>">
+            <%= type==="success" ? "Operation Successful" : "Server Error Occurred" %>
+        </h2>
+
+        <!-- ========== CUSTOM MESSAGE ========== -->
+        <p class="text-lg tech-font mb-8 
+            <%= type === 'success' ? 'text-green-400' : 'text-red-300' %>">
+            <%= message %>
+        </p>
+
+        <!-- ========== TERMINAL OUTPUT BOX ========== -->
+        <div class="w-full max-w-2xl bg-[#050912] border border-green-400/40 rounded-lg p-4 tech-font">
+
+            <div class="flex items-center space-x-2 mb-3">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                <span class="ml-3 text-blue-400">terminal:~$ ./status</span>
+            </div>
+
+            <pre class="whitespace-pre-wrap text-green-300 text-sm">
+root@AaaS:~$ system.check --code=<%= errorCode %>
+
+Status  : <%= type === "success" ? "OK" : "FAILED" %>
+Message : <%= message %>
+
+Timestamp : <%= new Date().toLocaleString() %>
+Logs saved at: /var/log/aaas/system.log
+            </pre>
+        </div>
+
+        <!-- BUTTON -->
+        <a href="/" class="mt-8 px-5 py-2 border border-blue-400 text-blue-300 
+                          rounded-lg hover:bg-blue-800/20 transition tech-font">
+            ./back
+        </a>
+
+    </div>
+
+</body>
+
+</html>

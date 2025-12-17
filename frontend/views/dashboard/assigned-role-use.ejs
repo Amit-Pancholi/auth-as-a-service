@@ -1,0 +1,224 @@
+<%- include("../parties/head", { title: "Assigned Roles" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV -->
+        <%- include('../parties/nav.ejs',{title:"assigned_roles"}) %>
+
+            <div class="flex w-full gap-6">
+
+                <!-- SIDE NAV -->
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:"roles"}) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1">
+
+                        <h1 class="text-3xl font-bold text-green-400 mt-6 mb-6">
+                            Assigned Roles
+                        </h1>
+
+                        <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 overflow-x-auto">
+
+                            <table class="min-w-full text-left text-gray-100">
+                                <thead class="bg-gray-800">
+                                    <tr>
+                                        <th class="p-4 font-semibold">User</th>
+                                        <th class="p-4 font-semibold">Email</th>
+                                        <th class="p-4 font-semibold">Mobile</th>
+                                        <th class="p-4 font-semibold">App</th>
+                                        <th class="p-4 font-semibold">Role</th>
+                                        <th class="p-4 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <% assignedUsers.forEach(u=> { %>
+
+                                        <tr class="border-b border-gray-700 hover:bg-gray-900">
+
+                                            <!-- NAME -->
+                                            <td class="p-4">
+                                                <%= u.first_name %>
+                                                    <%= u.last_name %>
+                                            </td>
+
+                                            <!-- MASKED EMAIL -->
+                                            <td class="p-4">
+                                                <% const email=u.email; const maskedEmail=email.substring(0,3)
+                                                    + "*****@" + email.split("@")[1]; %>
+                                                    <%= maskedEmail %>
+                                            </td>
+
+                                            <!-- MASKED MOBILE -->
+                                            <td class="p-4">
+                                                <% const mobile=u.mobile_no; const maskedMobile=mobile.substring(0,3)
+                                                    + "******" + mobile.slice(-2); %>
+                                                    <%= maskedMobile %>
+                                            </td>
+
+                                            <!-- APP -->
+                                            <td class="p-4">
+                                                <%= u.app_name %>
+                                            </td>
+
+                                            <!-- ROLE -->
+                                            <td class="p-4 text-yellow-400 font-semibold">
+                                                <%= u.role %>
+                                            </td>
+
+                                            <!-- ACTIONS -->
+                                            <td class="p-4 flex gap-3">
+
+                                                <!-- REMOVE ROLE -->
+                                                <form action="/dashboard/Roles/assigned/remove" method="POST">
+                                                    <input type="hidden" name="ur_id" value="<%= u.user_role_id %>">
+                                                    <button type="submit"
+                                                        class="border border-red-500 text-red-400 px-4 py-1 rounded-md tech-font hover:bg-red-900/20 hover:border-red-400">
+                                                        ./remove
+                                                    </button>
+                                                </form>
+
+                                                <!-- UPDATE ROLE -->
+                                                <button
+                                                    onclick="openUpdateRoleModal('<%= u.user_role_id %>', '<%= u.app_id %>')"
+                                                    class="border border-blue-500 text-blue-400 px-4 py-1 rounded-md tech-font hover:bg-blue-900/20 hover:border-blue-400">
+                                                    ./update
+                                                </button>
+
+                                            </td>
+                                        </tr>
+
+                                        <% }) %>
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </main>
+
+            </div>
+
+
+            <!-- ==================== UPDATE ROLE MODAL ==================== -->
+            <div id="updateRoleModal" class="fixed inset-0 bg-black/70 hidden z-50 flex justify-center items-center">
+
+                <div class="bg-[#161b22] p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
+
+                    <h2 class="text-xl text-blue-400 font-semibold mb-6 tech-font">Update User Role</h2>
+
+                    <input type="hidden" id="updateUrId">
+                    <input type="hidden" id="updateAppId">
+
+                    <label class="text-green-400 tech-font mb-1">Select New Role</label>
+
+                    <select id="updateRoleDropdown"
+                        class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 mb-6 text-gray-200">
+                        <option>Loading...</option>
+                    </select>
+
+                    <div class="flex justify-between">
+                        <button onclick="closeUpdateRoleModal()"
+                            class="border border-gray-500 text-gray-300 px-4 py-1.5 rounded-md hover:bg-gray-700 hover:border-gray-400 tech-font">
+                            ./close
+                        </button>
+
+                        <button onclick="submitUpdateRole()"
+                            class="border border-blue-500 text-blue-400 px-4 py-1.5 rounded-md hover:bg-blue-900/20 hover:border-blue-400 tech-font">
+                            ./update
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================== SCRIPT ==================== -->
+            <script>
+
+                async function openUpdateRoleModal(ur_id, app_id) {
+
+                    document.getElementById("updateUrId").value = ur_id;
+                    document.getElementById("updateAppId").value = app_id;
+
+                    const dropdown = document.getElementById("updateRoleDropdown");
+                    dropdown.innerHTML = `<option>Loading...</option>`;
+
+                    try {
+                        // 🔥 correct URL (DO NOT CHANGE)
+                        const res = await fetch('/dashboard/Roles/get-by-app', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ app_id })
+                        });
+
+                        const data = await res.json();
+
+                        // 🔥 auto-detect role array shape
+                        let roles = [];
+
+                        if (Array.isArray(data)) roles = data;
+                        else if (Array.isArray(data.data)) roles = data.data;
+                        else if (data.data && Array.isArray(data.data.data)) roles = data.data.data;
+                        else if (data.roles) roles = data.roles;
+                        else roles = [];
+
+                        dropdown.innerHTML = "";
+
+                        if (roles.length === 0) {
+                            dropdown.innerHTML = `<option value="">No roles found</option>`;
+                        } else {
+                            roles.forEach(r => {
+                                dropdown.innerHTML += `<option value="${r.id}">${r.name}</option>`;
+                            });
+                        }
+
+                    } catch (err) {
+                        dropdown.innerHTML = `<option>Error loading roles</option>`;
+                    }
+
+                    document.getElementById("updateRoleModal").classList.remove("hidden");
+                }
+
+                function closeUpdateRoleModal() {
+                    document.getElementById("updateRoleModal").classList.add("hidden");
+                }
+
+
+                /* SUBMIT ROLE UPDATE */
+                function submitUpdateRole() {
+
+                    const ur_id = document.getElementById("updateUrId").value;
+                    const role_id = document.getElementById("updateRoleDropdown").value;
+
+                    const form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = "/dashboard/Roles/assigned/update";
+
+                    form.innerHTML = `
+        <input type="hidden" name="ur_id" value="${ur_id}">
+        <input type="hidden" name="role_id" value="${role_id}">
+    `;
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+
+            </script>
+
+    </body>
+
+    </html>

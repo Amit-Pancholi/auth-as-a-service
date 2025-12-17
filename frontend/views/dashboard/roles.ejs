@@ -1,0 +1,232 @@
+<%- include("../parties/head", { title: "Roles" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV -->
+        <%- include('../parties/nav.ejs',{title:activeSide}) %>
+
+            <div class="flex w-full gap-6">
+
+                <!-- SIDE NAV -->
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:activeSide}) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1">
+
+                        <!-- HEADER BAR -->
+                        <div class="flex justify-between items-center mt-6">
+                            <h1 class="text-3xl font-bold text-green-400">Roles</h1>
+
+                            <!-- ASSIGN ROLE PAGE (kept) -->
+                            <a href="/dashboard/Roles/assign" class="border border-yellow-500/50 text-yellow-400 px-4 py-1.5 rounded-md tech-font
+                    hover:bg-yellow-900/20 hover:border-yellow-400 transition-all">
+                                ./assign_roles
+                            </a>
+                        </div>
+
+                        <!-- ROLES TABLE -->
+                        <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 overflow-x-auto mt-6">
+                            <table class="min-w-full text-left text-gray-100">
+                                <thead class="bg-gray-800">
+                                    <tr>
+                                        <th class="p-4 font-semibold">Role</th>
+                                        <th class="p-4 font-semibold">App</th>
+                                        <th class="p-4 font-semibold">Created</th>
+                                        <th class="p-4 font-semibold">Updated</th>
+                                        <th class="p-4 font-semibold">Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <% roles.forEach(role=> { %>
+
+                                        <tr class="border-b border-gray-700 hover:bg-gray-900 cursor-pointer" onclick="openRoleModal(
+                                    <%= role.id %>,
+                                    '<%= role.name %>',
+                                    '<%= role.description %>',
+                                    '<%= role.app_name %>',
+                                    '<%= role.createdAt %>',
+                                    <%= role.active %>,
+                                    <%= role.app_id %>
+                                )">
+
+                                            <td class="p-4 hover:text-green-400">
+                                                <%= role.name %>
+                                            </td>
+                                            <td class="p-4">
+                                                <%= role.app_name %>
+                                            </td>
+                                            <td class="p-4">
+                                                <%= role.createdAt.toString().slice(0,10) %>
+                                            </td>
+                                            <td class="p-4">
+                                                <%= role.updatedAt.toString().slice(0,10) %>
+                                            </td>
+
+                                            <td class="p-4">
+                                                <% if(role.active){ %>
+                                                    <span class="text-green-400">active</span>
+                                                    <% } else { %>
+                                                        <span class="text-red-400">removed</span>
+                                                        <% } %>
+                                            </td>
+
+                                        </tr>
+
+                                        <% }) %>
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </main>
+            </div>
+
+            <!-- ======================= ROLE MODAL ======================= -->
+            <div id="roleModal" class="fixed inset-0 bg-black/70 hidden z-50 flex justify-center items-center">
+
+                <div class="bg-[#161b22] p-8 rounded-2xl border border-gray-700 w-full max-w-lg shadow-xl">
+
+                    <h2 class="text-2xl text-green-400 font-semibold mb-6 tech-font">
+                        Role Details
+                    </h2>
+
+                    <div class="space-y-5">
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Role Name</label>
+                            <input id="modalRoleName" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Description</label>
+                            <textarea id="modalDesc" readonly rows="3"
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">App</label>
+                            <input id="modalApp" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Created At</label>
+                            <input id="modalCreated" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-green-400 tech-font">Status</label>
+                            <input id="modalStatus" readonly
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-200">
+                        </div>
+
+                    </div>
+
+                    <!-- Hidden form for update -->
+                    <form id="roleUpdateForm" method="POST" action="/dashboard/Roles/update-page" class="hidden">
+                        <input type="hidden" name="role_id" id="hiddenRoleId">
+                        <input type="hidden" name="name" id="hiddenRoleName">
+                        <input type="hidden" name="description" id="hiddenRoleDesc">
+                        <input type="hidden" name="app_id" id="hiddenAppId">
+                    </form>
+
+                    <!-- Hidden form for removal -->
+                    <form id="removeRoleForm" method="POST" action="/dashboard/Roles/remove" class="hidden">
+                        <input type="hidden" name="role_id" id="removeRoleId">
+                        <input type="hidden" name="app_id" id="removeAppId">
+                    </form>
+
+                    <!-- BUTTONS -->
+                    <div class="flex justify-between mt-6">
+
+                        <button onclick="closeRoleModal()" class="border border-gray-500 text-gray-300 px-4 py-1.5 rounded-md tech-font
+                    hover:bg-gray-700 hover:border-gray-400 transition-all">
+                            ./close
+                        </button>
+
+                        <div class="flex gap-3">
+
+                            <button id="updateRoleBtn" onclick="submitRoleUpdate()" class="border border-blue-500 text-blue-300 px-4 py-1.5 rounded-md tech-font
+                        hover:bg-blue-900/20 hover:border-blue-400 transition-all">
+                                ./update_role
+                            </button>
+
+                            <button id="removeRoleBtn" onclick="submitRemoveRole()" class="border border-red-500 text-red-400 px-4 py-1.5 rounded-md tech-font
+                        hover:bg-red-900/20 hover:border-red-400 transition-all">
+                                ./remove_role
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <script>
+                function openRoleModal(id, name, desc, app, created, active, app_id) {
+
+                    document.getElementById("modalRoleName").value = name;
+                    document.getElementById("modalDesc").value = desc;
+                    document.getElementById("modalApp").value = app;
+                    document.getElementById("modalCreated").value = created.slice(0, 10);
+                    document.getElementById("modalStatus").value = active ? "Active" : "Removed";
+
+                    // hidden update form
+                    document.getElementById("hiddenRoleId").value = id;
+                    document.getElementById("hiddenRoleName").value = name;
+                    document.getElementById("hiddenRoleDesc").value = desc;
+                    document.getElementById("hiddenAppId").value = app_id;
+
+                    // hidden remove form
+                    document.getElementById("removeRoleId").value = id;
+                    document.getElementById("removeAppId").value = app_id;
+
+                    const updateBtn = document.getElementById("updateRoleBtn");
+                    const removeBtn = document.getElementById("removeRoleBtn");
+
+                    if (!active) {
+                        updateBtn.style.display = "none";
+                        removeBtn.style.display = "none";
+                    } else {
+                        updateBtn.style.display = "inline-block";
+                        removeBtn.style.display = "inline-block";
+                    }
+
+                    document.getElementById("roleModal").classList.remove("hidden");
+                }
+
+                function closeRoleModal() {
+                    document.getElementById("roleModal").classList.add("hidden");
+                }
+
+                function submitRoleUpdate() {
+                    document.getElementById("roleUpdateForm").submit();
+                }
+
+                function submitRemoveRole() {
+                    document.getElementById("removeRoleForm").submit();
+                }
+            </script>
+
+    </body>
+
+    </html>

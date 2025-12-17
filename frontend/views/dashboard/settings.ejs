@@ -1,0 +1,103 @@
+<%- include("../parties/head", { title: "Settings" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV -->
+        <%- include('../parties/nav.ejs',{title:activeSide}) %>
+
+            <div class="flex w-full gap-6">
+
+                <!-- SIDE NAV -->
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:activeSide}) %>
+
+                    <!-- MAIN -->
+                    <main class="flex-1 flex justify-center">
+
+                        <div class="w-full max-w-lg">
+
+                            <h1 class="text-3xl font-bold text-green-400 mb-6 text-center">Settings</h1>
+
+                            <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700">
+
+                                <!-- ERROR SECTION -->
+                                <% if (errors && errors.length> 0) { %>
+                                    <div class="mb-4 p-4 border border-red-500 rounded-lg bg-red-900/20 text-red-400">
+                                        <% errors.forEach(err=> { %>
+                                            <p class="mb-1">• <%= err %>
+                                            </p>
+                                            <% }) %>
+                                    </div>
+                                    <% } %>
+
+                                        <form action="/dashboard/Settings/update" method="POST"
+                                            class="flex flex-col gap-4">
+
+                                            <!-- FIRST & LAST NAME (SIDE BY SIDE) -->
+                                            <div class="flex gap-4">
+
+                                                <!-- FIRST NAME -->
+                                                <div class="w-1/2">
+                                                    <label class="block text-gray-400 mb-1" for="first_name">First
+                                                        Name</label>
+                                                    <input type="text" name="first_name" id="first_name"
+                                                        value="<%= user.first_name %>" class="bg-gray-800 border border-gray-700 rounded px-4 py-2 w-full 
+                                           focus:outline-none focus:border-green-400">
+                                                </div>
+
+                                                <!-- LAST NAME -->
+                                                <div class="w-1/2">
+                                                    <label class="block text-gray-400 mb-1" for="last_name">Last
+                                                        Name</label>
+                                                    <input type="text" name="last_name" id="last_name"
+                                                        value="<%= user.last_name %>" class="bg-gray-800 border border-gray-700 rounded px-4 py-2 w-full 
+                                           focus:outline-none focus:border-green-400">
+                                                </div>
+
+                                            </div>
+
+                                            <!-- EMAIL (READ ONLY) -->
+                                            <div>
+                                                <label class="block text-gray-400 mb-1" for="email">Email</label>
+                                                <input type="email" name="email" id="email" value="<%= user.email %>"
+                                                    readonly class="bg-gray-900 border border-gray-700 rounded px-4 py-2 w-full 
+                                       cursor-not-allowed text-gray-400">
+                                            </div>
+
+                                            <!-- PHONE -->
+                                            <div>
+                                                <label class="block text-gray-400 mb-1" for="phone">Phone</label>
+                                                <input type="text" name="mobile_no" id="phone"
+                                                    value="<%= user.mobile_no %>" class="bg-gray-800 border border-gray-700 rounded px-4 py-2 w-full 
+                                       focus:outline-none focus:border-green-400">
+                                            </div>
+
+                                            <!-- SAVE BUTTON -->
+                                            <button type="submit"
+                                                class="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded text-white font-semibold mt-2">
+                                                Save Settings
+                                            </button>
+
+                                        </form>
+
+                            </div>
+
+                        </div>
+
+                    </main>
+            </div>
+
+    </body>
+
+    </html>

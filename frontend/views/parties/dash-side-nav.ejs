@@ -1,0 +1,30 @@
+<!-- LEFT SIDEBAR (Universal Menu) -->
+<aside class="w-64 bg-[#161b22] border-r border-gray-700 h-[calc(100vh-64px)] p-6 space-y-5">
+
+    <h2 class="text-lg font-semibold text-green-400 mb-4">Menu</h2>
+
+    <a href="/Dashboard" class="block py-2 nav-hover <%= activeSide === 'dashboard' ? 'nav-active' : '' %>">
+        ./dashboard
+    </a>
+
+    <a href="/Dashboard/Apps" class="block py-2 nav-hover <%= activeSide === 'apps' ? 'nav-active' : '' %>">
+        ./apps
+    </a>
+
+    <a href="/Dashboard/Users" class="block py-2 nav-hover <%= activeSide === 'users' ? 'nav-active' : '' %>">
+        ./users
+    </a>
+
+    <a href="/Dashboard/Roles" class="block py-2 nav-hover <%= activeSide === 'roles' ? 'nav-active' : '' %>">
+        ./roles
+    </a>
+
+    <a href="/Dashboard/Tokens" class="block py-2 nav-hover <%= activeSide === 'tokens' ? 'nav-active' : '' %>">
+        ./tokens
+    </a>
+
+    <a href="/Dashboard/Settings" class="block py-2 nav-hover <%= activeSide === 'settings' ? 'nav-active' : '' %>">
+        ./settings
+    </a>
+
+</aside>

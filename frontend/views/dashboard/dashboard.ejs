@@ -1,0 +1,80 @@
+
+    <%- include("../parties/head", { title: "Dashboard" }) %>
+        <style>
+            .nav-active {
+                color: #22c55e !important;
+                /* Green */
+                font-weight: 600;
+            }
+
+            .nav-hover:hover {
+                color: #22c55e;
+            }
+        </style>
+</head>
+
+<body class="bg-[#0d1117] text-gray-200">
+
+    <!-- TOP NAV BAR -->
+<%- include('../parties/nav.ejs',{title:activeSide}) %>
+
+
+    <!-- PAGE STRUCTURE -->
+    <div class="flex w-full gap-6">
+
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:activeSide}) %>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 p-10">
+
+            <h1 class="text-3xl font-bold text-green-400 mb-6">Dashboard</h1>
+
+            <!-- Stat Boxes -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-400">Total Users</p>
+                    <h2 class="text-3xl font-bold text-blue-400 mt-2">
+                        <%= totalUsers %>
+                    </h2>
+                </div>
+
+                <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-400">Active Apps</p>
+                    <h2 class="text-3xl font-bold text-purple-400 mt-2">
+                        <%= totalApps %>
+                    </h2>
+                </div>
+
+                <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-400">Roles</p>
+                    <h2 class="text-3xl font-bold text-yellow-400 mt-2">
+                        <%= totalRoles %>
+                    </h2>
+                </div>
+
+                <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700">
+                    <p class="text-sm text-gray-400">Banned Users</p>
+                    <h2 class="text-3xl font-bold text-red-400 mt-2">
+                        <%= totalBanned %>
+                    </h2>
+                </div>
+
+            </div>
+
+            <!-- Chart Area -->
+            <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 mt-10">
+                <h2 class="text-xl font-semibold text-green-400 mb-4">Traffic Graph</h2>
+                <div class="h-64 flex justify-center items-center text-gray-500 italic">
+                    Chart Loading...
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

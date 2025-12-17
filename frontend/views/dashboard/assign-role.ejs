@@ -1,0 +1,113 @@
+<%- include("../parties/head", { title: "Assign Role" }) %>
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV BAR -->
+        <%- include('../parties/nav.ejs',{title:activeSide}) %>
+
+            <!-- FLEX CONTAINER FOR SIDEBAR + MAIN -->
+            <div class="flex w-full gap-6">
+
+                <!-- LEFT SIDEBAR -->
+                <%- include('../parties/dash-side-nav.ejs',{activeSide:activeSide}) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1">
+
+                        <h1 class="text-3xl font-bold text-green-400 mb-6">Assign Role</h1>
+
+                        <!-- ASSIGN ROLE FORM -->
+                        <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 mb-8">
+                            <h2 class="text-xl font-semibold text-green-400 mb-4">Assign Role</h2>
+                            <form action="/AssignRole/add" method="POST" class="flex flex-col sm:flex-row gap-4">
+                                <select name="userId"
+                                    class="bg-gray-800 border border-gray-700 rounded px-4 py-2 flex-1 focus:outline-none focus:border-green-400">
+                                    <option value="">Select User</option>
+                                    <% users.forEach(user=> { %>
+                                        <option value="<%= user.id %>">
+                                            <%= user.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+
+                                <select name="roleId"
+                                    class="bg-gray-800 border border-gray-700 rounded px-4 py-2 flex-1 focus:outline-none focus:border-green-400">
+                                    <option value="">Select Role</option>
+                                    <% roles.forEach(role=> { %>
+                                        <option value="<%= role.id %>">
+                                            <%= role.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+
+                                <select name="appId"
+                                    class="bg-gray-800 border border-gray-700 rounded px-4 py-2 flex-1 focus:outline-none focus:border-green-400">
+                                    <option value="">Select App</option>
+                                    <% apps.forEach(app=> { %>
+                                        <option value="<%= app.id %>">
+                                            <%= app.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+
+                                <button type="submit"
+                                    class="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded text-white font-semibold">Assign</button>
+                            </form>
+                        </div>
+
+                        <!-- CURRENT ASSIGNMENTS TABLE -->
+                        <div class="bg-[#161b22] p-6 rounded-xl border border-gray-700 overflow-x-auto">
+                            <table class="min-w-full text-left text-gray-100">
+                                <thead class="bg-gray-800">
+                                    <tr>
+                                        <th class="p-4 font-semibold">User</th>
+                                        <th class="p-4 font-semibold">Role</th>
+                                        <th class="p-4 font-semibold">App</th>
+                                        <th class="p-4 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% assignments.forEach(assign=> { %>
+                                        <tr class="border-b border-gray-700 hover:bg-gray-900">
+                                            <td class="p-4">
+                                                <%= assign.userName %>
+                                            </td>
+                                            <td class="p-4">
+                                                <%= assign.roleName %>
+                                            </td>
+                                            <td class="p-4">
+                                                <%= assign.appName %>
+                                            </td>
+                                            <td class="p-4 flex gap-2">
+                                                <form action="/AssignRole/update/<%= assign.id %>" method="GET">
+                                                    <button type="submit"
+                                                        class="bg-blue-500 hover:bg-blue-600 px-4 py-1 rounded text-white font-semibold">Update</button>
+                                                </form>
+                                                <form action="/AssignRole/delete/<%= assign.id %>" method="POST">
+                                                    <button type="submit"
+                                                        class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded text-white font-semibold">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </main>
+            </div>
+
+    </body>
+
+    </html>

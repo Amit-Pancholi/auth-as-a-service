@@ -1,0 +1,98 @@
+<%- include("../parties/head", { title: "Update App" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV -->
+        <%- include("../parties/nav.ejs", { title: "update_app" }) %>
+
+            <div class="flex w-full">
+
+                <!-- SIDEBAR -->
+                <%- include("../parties/dash-side-nav.ejs", { activeSide: activeSide }) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1 p-8 pl-10">
+
+                        <!-- HEADER -->
+                        <div class="flex justify-between items-center mb-8">
+                            <h1 class="text-3xl font-bold text-green-400">Update App</h1>
+
+                            <a href="/dashboard/Apps" class="border border-blue-400/50 text-blue-300 px-4 py-1.5 rounded-md tech-font
+                           hover:bg-blue-900/20 hover:border-blue-400 transition-all">
+                                ./back
+                            </a>
+                        </div>
+
+                        <!-- UPDATE CARD -->
+                        <div
+                            class="bg-[#161b22] p-8 rounded-2xl border border-gray-700 w-full max-w-2xl shadow-xl mx-auto">
+
+                            <h2 class="text-xl text-green-300 tech-font mb-4">Modify Application</h2>
+
+                            <% if (errors && errors.length> 0) { %>
+                                <div class="mb-4 p-3 border border-red-500 rounded bg-red-900/20 text-red-400">
+                                    <% errors.forEach(err=> { %>
+                                        <p>
+                                            <%= err %>
+                                        </p>
+                                        <% }) %>
+                                </div>
+                                <% } %>
+
+                                    <form action="/dashboard/Apps/update/<%= app.app_id %>" method="POST" class="space-y-6">
+
+                                        <!-- NAME -->
+                                        <div>
+                                            <label class="block text-green-400 mb-1 tech-font">App Name</label>
+                                            <input type="text" name="app_name"
+                                                value="<%= app.app_name %>" class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2
+                                      text-gray-100 focus:outline-none focus:border-green-400">
+                                        </div>
+
+                                        <!-- DESCRIPTION -->
+                                        <div>
+                                            <label class="block text-green-400 mb-1 tech-font">Description</label>
+                                            <textarea name="description" rows="3"
+                                                class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2
+                                         text-gray-100 focus:outline-none focus:border-green-400"><%=  app.description %></textarea>
+                                        </div>
+
+                                        <!-- SECRET -->
+                                        <div>
+                                            <label class="block text-green-400 mb-1 tech-font">Secret</label>
+                                            <input type="text" name="secret"
+                                                value="<%=  app.secret %>" class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2
+                                      text-gray-100 focus:outline-none focus:border-green-400">
+                                        </div>
+
+                                        <!-- SUBMIT -->
+                                        <div class="pt-4">
+                                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg
+                                   text-white font-semibold tech-font text-lg">
+                                                ./update_app
+                                            </button>
+                                        </div>
+
+                                    </form>
+
+                        </div>
+
+                    </main>
+            </div>
+
+    </body>
+
+    </html>

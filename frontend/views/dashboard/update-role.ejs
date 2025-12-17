@@ -1,0 +1,93 @@
+<%- include("../parties/head", { title: "Update Role" }) %>
+
+    <style>
+        .nav-active {
+            color: #22c55e !important;
+            font-weight: 600;
+        }
+
+        .nav-hover:hover {
+            color: #22c55e;
+        }
+    </style>
+
+    </head>
+
+    <body class="bg-[#0d1117] text-gray-200">
+
+        <!-- TOP NAV -->
+        <%- include("../parties/nav.ejs", { title: "update_role" }) %>
+
+            <div class="flex w-full gap-6">
+
+                <!-- SIDE NAV -->
+                <%- include("../parties/dash-side-nav.ejs", { activeSide: activeSide }) %>
+
+                    <!-- MAIN CONTENT -->
+                    <main class="flex-1 p-8 pl-10">
+
+                        <!-- HEADER -->
+                        <div class="flex justify-between items-center mb-8">
+                            <h1 class="text-3xl font-bold text-green-400">Update Role</h1>
+
+                            <a href="/dashboard/Roles" class="border border-blue-400/50 text-blue-300 px-4 py-1.5 rounded-md tech-font
+                    hover:bg-blue-900/20 hover:border-blue-400 transition-all">
+                                ./back
+                            </a>
+                        </div>
+
+                        <!-- UPDATE CARD -->
+                        <div
+                            class="bg-[#161b22] p-8 rounded-2xl border border-gray-700 w-full max-w-3xl shadow-xl mx-auto">
+
+                            <h2 class="text-xl text-green-300 tech-font mb-4">Modify Role</h2>
+
+                            <% if (errors && errors.length> 0) { %>
+                                <div class="mb-4 p-3 border border-red-500 rounded bg-red-900/20 text-red-400">
+                                    <% errors.forEach(err=> { %>
+                                        <p>
+                                            <%= err %>
+                                        </p>
+                                        <% }) %>
+                                </div>
+                                <% } %>
+
+                                    <!-- UPDATE FORM -->
+                                    <form action="/dashboard/Roles/update" method="POST"
+                                        class="space-y-6">
+
+                                        <!-- ROLE NAME -->
+                                        <div>
+                                            <label class="block text-green-400 mb-1 tech-font">Role Name</label>
+                                            <input type="text" name="name" value="<%= role.name %>" class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2
+                            text-gray-100 focus:outline-none focus:border-green-400">
+                                        </div>
+
+                                        <!-- DESCRIPTION -->
+                                        <div>
+                                            <label class="block text-green-400 mb-1 tech-font">Description</label>
+                                            <textarea name="description" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2
+                            text-gray-100 focus:outline-none focus:border-green-400"><%= role.description %></textarea>
+                                        </div>
+
+                                        <!-- APP ID (HIDDEN) -->
+                                        <input type="hidden" name="role_id" value="<%= role.role_id %>">
+
+                                        <!-- SUBMIT -->
+                                        <div class="pt-4">
+                                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg
+                            text-white font-semibold tech-font text-lg">
+                                                ./update_role
+                                            </button>
+                                        </div>
+
+                                    </form>
+
+                        </div>
+
+                    </main>
+            </div>
+
+    </body>
+
+    </html>
