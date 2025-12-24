@@ -69,6 +69,6 @@ module.exports = async (req, res, next) => {
       return res
       .status(500)
       .json(
-        new Response(500, null, "Internal server error " + err)
+        new Response(500, null, "Internal server error " + err))
   }
 };
