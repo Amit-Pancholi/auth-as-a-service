@@ -1,6 +1,6 @@
 .env
 package-lock.json
 
-node_modles/
+node_modules/
 
 /generated/prisma

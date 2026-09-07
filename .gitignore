@@ -1,2 +1,15 @@
-node_modules
 .env
+client-service/node_modules
+token-service/node_modules
+rbac-service/node_modules
+user-service/node_modules
+frontend/node_modules
+client-service/generated/prisma
+token-service/generated/prisma
+rbac-service/generated/prisma
+user-service/generated/prisma
+client-service/package-lock.json
+token-service/package-lock.json
+rbac-service/package-lock.json
+user-service/package-lock.json
+frontend/package-lock.json
