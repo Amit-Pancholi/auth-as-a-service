@@ -7,7 +7,7 @@ exports.getDashboard = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/all`, {
       method: "GET",
@@ -17,7 +17,7 @@ exports.getDashboard = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -60,7 +60,7 @@ exports.getApps = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/all`, {
       method: "GET",
@@ -70,7 +70,7 @@ exports.getApps = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -88,7 +88,7 @@ exports.getApps = async (req, res) => {
 
     // On successful login, redirect to home or dashboard
     const apps = data?.data;
-    // console.log(tokens);
+    // // console.log(tokens);
     res.render("dashboard/apps", {
       activeTop: "apps",
       activeSide: "overview",
@@ -107,9 +107,9 @@ exports.getUrlToken = async (req, res) => {
   try {
     const { app_id } = req.body;
     const cookies = cookie.parse(req.headers.cookie || "");
-    // console.log(app_id);
+    // // console.log(app_id);
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/getUrlAndToken`, {
       method: "POST",
@@ -120,7 +120,7 @@ exports.getUrlToken = async (req, res) => {
       body: JSON.stringify({ app_id }),
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -135,7 +135,7 @@ exports.getUrlToken = async (req, res) => {
         type: "error",
         message: "Service Unavailable. Please try again later.",
       });
-    // console.log(data);
+    // // console.log(data);
     return res
       .status(data.statusCode)
       .json({ url: data.data.url, token: data.data.token });
@@ -183,7 +183,7 @@ exports.postAddApp = [
     try {
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        // console.log(error.array().map((err) => err.msg));
+        // // console.log(error.array().map((err) => err.msg));
         return res.render("dashboard/createApp", {
           activeSide: "apps",
           activeTop: "Create App",
@@ -204,12 +204,12 @@ exports.postAddApp = [
   },
   async (req, res) => {
     try {
-      console.log(req.body);
+      // console.log(req.body);
       const { appName, description, secret } = req.body;
       const cookies = cookie.parse(req.headers.cookie || "");
-      // console.log(app_id);
+      // // console.log(app_id);
       const accessToken = cookies.access_token;
-      // console.log("Access Token:", accessToken);
+      // // console.log("Access Token:", accessToken);
 
       const response = await fetch(`${backend_url}/api/AaaS/v1/add`, {
         method: "POST",
@@ -220,7 +220,7 @@ exports.postAddApp = [
         body: JSON.stringify({ app_name: appName, description, secret }),
       });
       if (!response.ok) {
-        console.log(response);
+        // console.log(response);
         return res.status(response.status).render("error/server-error", {
           errorCode: response.status,
           type: "error",
@@ -235,7 +235,7 @@ exports.postAddApp = [
           type: "error",
           message: "Service Unavailable. Please try again later.",
         });
-      // console.log(data);
+      // // console.log(data);
       return res.redirect("/dashboard/apps");
     } catch (err) {
       return res.status(500).render("error/server-error", {
@@ -288,7 +288,7 @@ exports.putUpdateApp = [
     try {
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        // console.log(error.array().map((err) => err.msg));
+        // // console.log(error.array().map((err) => err.msg));
         return res.render("dashboard/updateApp", {
           activeSide: "apps",
           activeTop: "Update App",
@@ -312,9 +312,9 @@ exports.putUpdateApp = [
       const { appId } = req.params;
       const { app_name, description } = req.body;
       const cookies = cookie.parse(req.headers.cookie || "");
-      // console.log(app_id);
+      // // console.log(app_id);
       const accessToken = cookies.access_token;
-      // console.log("Access Token:", accessToken);
+      // // console.log("Access Token:", accessToken);
 
       const response = await fetch(
         `${backend_url}/api/AaaS/v1/update/${appId}`,
@@ -328,7 +328,7 @@ exports.putUpdateApp = [
         }
       );
       if (!response.ok) {
-        console.log(response);
+        // console.log(response);
         return res.status(response.status).render("error/server-error", {
           errorCode: response.status,
           type: "error",
@@ -343,7 +343,7 @@ exports.putUpdateApp = [
           type: "error",
           message: "Service Unavailable. Please try again later.",
         });
-      // console.log(data);
+      // // console.log(data);
       next();
     } catch (err) {
       return res.status(500).render("error/server-error", {
@@ -358,9 +358,9 @@ exports.putUpdateApp = [
       const { appId } = req.params;
       const { secret } = req.body;
       const cookies = cookie.parse(req.headers.cookie || "");
-      // console.log(app_id);
+      // // console.log(app_id);
       const accessToken = cookies.access_token;
-      // console.log("Access Token:", accessToken);
+      // // console.log("Access Token:", accessToken);
 
       const response = await fetch(`${backend_url}/api/AaaS/v1/app/secret`, {
         method: "POST",
@@ -371,7 +371,7 @@ exports.putUpdateApp = [
         body: JSON.stringify({ app_id: appId, secret }),
       });
       if (!response.ok) {
-        console.log(response);
+        // // console.log(response);
         return res.status(response.status).render("error/server-error", {
           errorCode: response.status,
           type: "error",
@@ -386,7 +386,7 @@ exports.putUpdateApp = [
           type: "error",
           message: "Service Unavailable. Please try again later.",
         });
-      // console.log(data);
+      // // // console.log(data);
       return res.redirect("/dashboard/apps");
     } catch (err) {
       return res.status(500).render("error/server-error", {
@@ -402,9 +402,9 @@ exports.postDeleteApp = async (req, res) => {
   try {
     const { appId } = req.params;
     const cookies = cookie.parse(req.headers.cookie || "");
-    // console.log(app_id);
+    // // // console.log(app_id);
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/${appId}`, {
       method: "DELETE",
@@ -414,7 +414,7 @@ exports.postDeleteApp = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -423,14 +423,14 @@ exports.postDeleteApp = async (req, res) => {
     }
 
     const data = await response.json();
-    // console.log(data);
+    // // // console.log(data);
     if (!data)
       return res.status(503).render("error/server-error", {
         errorCode: 503,
         type: "error",
         message: "Service Unavailable. Please try again later.",
       });
-    // console.log(data);
+    // // // console.log(data);
     return res.redirect("/dashboard/apps");
   } catch (err) {
     return res.status(500).render("error/server-error", {
@@ -446,7 +446,7 @@ exports.getTokens = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/token/user`, {
       method: "GET",
@@ -456,7 +456,7 @@ exports.getTokens = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // // // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -474,8 +474,8 @@ exports.getTokens = async (req, res) => {
 
     // On successful login, redirect to home or dashboard
     const userToken = data?.data;
-    // console.log(apps);
-    // console.log(userToken);
+    // // // console.log(apps);
+    // // // console.log(userToken);
     res.render("dashboard/token", {
       activeTop: "tokens",
       activeSide: "overview",
@@ -497,7 +497,7 @@ exports.postForceLogout = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // // console.log("Access Token:", accessToken);
 
     const response = await fetch(
       `${backend_url}/api/AaaS/v1/token/user/remove`,
@@ -511,7 +511,7 @@ exports.postForceLogout = async (req, res) => {
       }
     );
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -541,7 +541,7 @@ exports.getSettings = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/myself`, {
       method: "GET",
@@ -551,7 +551,7 @@ exports.getSettings = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -566,7 +566,7 @@ exports.getSettings = async (req, res) => {
         type: "error",
         message: "Service Unavailable. Please try again later.",
       });
-    console.log(data);
+    // // console.log(data);
     res.render("dashboard/settings", {
       activeTop: "settings",
       activeSide: "overview",
@@ -620,7 +620,7 @@ exports.postUpdateSetting = [
     try {
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        // console.log(error.array().map((err) => err.msg));
+        // // console.log(error.array().map((err) => err.msg));
         return res.render("dashboard/settings", {
           title: "Settings",
           user: req.body,
@@ -645,7 +645,7 @@ exports.postUpdateSetting = [
       const cookies = cookie.parse(req.headers.cookie || "");
 
       const accessToken = cookies.access_token;
-      // console.log("Access Token:", accessToken);
+      // // console.log("Access Token:", accessToken);
 
       const response = await fetch(`${backend_url}/api/AaaS/v1/update/myself`, {
         method: "POST",
@@ -656,9 +656,9 @@ exports.postUpdateSetting = [
         body: JSON.stringify({ first_name, last_name, mobile_no,email }),
       });
       if (!response.ok) {
-        console.log(response);
+        // // console.log(response);
         const data = await response.json();
-        console.log(data)
+        // // console.log(data)
         return res.status(response.status).render("error/server-error", {
           errorCode: response.status,
           type: "error",

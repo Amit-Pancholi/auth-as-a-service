@@ -6,7 +6,7 @@ const authRoutes = require("./routers/auth-route");
 const dashboardRoutes = require("./routers/dashboard-route");
 const userRoleRoutes = require("./routers/user-role-route");
 const rootDir = require('./utils/path');
-
+const session_secret = process.env.SESSION_SECRET || "system32";
 
 const app = express()
 
@@ -17,7 +17,7 @@ app.set("view engine", "ejs");
 app.set("views", "views");
 app.use(
   session({
-    secret: "system32",
+    secret: session_secret,
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 1000 * 60 * 60 * 24 }, // 1 day

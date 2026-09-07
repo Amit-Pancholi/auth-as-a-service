@@ -99,6 +99,27 @@ services:
     depends_on:
       - postgres
 
+
+  # ---------------------------
+  # frontend service
+  # ---------------------------
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    env_file:
+      - .env
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    environment:
+      PORT: ${FRONTEND_PORT}
+      backend_URL: ${BACKEND_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+    depends_on:
+      - client-service
+      - user-service
+      - token-service
+      - rbac-service
+
 networks:
   default:
     name: microservices-net

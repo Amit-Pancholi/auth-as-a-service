@@ -8,7 +8,7 @@ exports.getUsers = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/user/all`, {
       method: "GET",
@@ -18,7 +18,7 @@ exports.getUsers = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -36,7 +36,7 @@ exports.getUsers = async (req, res) => {
 
     // On successful login, redirect to home or dashboard
     const users = data?.data;
-    //   console.log(users);
+    //   // console.log(users);
     res.render("dashboard/users", {
       activeTop: "users",
       activeSide: "overview",
@@ -56,9 +56,9 @@ exports.postBanUser = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
     const { user_id, app_id } = req.body;
-    // console.log(req.body);
+    // // console.log(req.body);
     const response = await fetch(`${backend_url}/api/AaaS/v1/user/ban`, {
       method: "POST",
       headers: {
@@ -68,7 +68,7 @@ exports.postBanUser = async (req, res) => {
       body: JSON.stringify({ app_id, user_id }),
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -86,7 +86,7 @@ exports.postBanUser = async (req, res) => {
 
     // On successful login, redirect to home or dashboard
     // const users = data?.data;
-    //   console.log(users);
+    //   // console.log(users);
     return res.redirect("/dashboard/users");
   } catch (err) {
     return res.status(500).render("error/server-error", {
@@ -101,7 +101,7 @@ exports.getBannedUsers = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/user/banned`, {
       method: "GET",
@@ -111,7 +111,7 @@ exports.getBannedUsers = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -129,7 +129,7 @@ exports.getBannedUsers = async (req, res) => {
 
     // On successful login, redirect to home or dashboard
     const bannedUsers = data?.data;
-    // console.log(bannedUsers);
+    // // console.log(bannedUsers);
     res.render("dashboard/banned-users", {
       activeTop: "banned-users",
       activeSide: "overview",
@@ -149,9 +149,9 @@ exports.postUnbanUser = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
     const { user_id, app_id } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     const response = await fetch(`${backend_url}/api/AaaS/v1/user/unban`, {
       method: "POST",
       headers: {
@@ -161,7 +161,7 @@ exports.postUnbanUser = async (req, res) => {
       body: JSON.stringify({ app_id, user_id }),
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -179,7 +179,7 @@ exports.postUnbanUser = async (req, res) => {
 
     // On successful login, redirect to home or dashboard
     // const users = data?.data;
-    //   console.log(users);
+    //   // console.log(users);
     return res.redirect("/dashboard/users/banned");
   } catch (err) {
     return res.status(500).render("error/server-error", {
@@ -194,7 +194,7 @@ exports.getRoles = async (req, res) => {
     const cookies = cookie.parse(req.headers.cookie || "");
 
     const accessToken = cookies.access_token;
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
 
     const response = await fetch(`${backend_url}/api/AaaS/v1/role/all`, {
       method: "GET",
@@ -204,7 +204,7 @@ exports.getRoles = async (req, res) => {
       },
     });
     if (!response.ok) {
-      console.log(response);
+      // console.log(response);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -220,7 +220,7 @@ exports.getRoles = async (req, res) => {
         message: "Service Unavailable. Please try again later.",
       });
     const roles = data?.data;
-      console.log(roles);
+      // console.log(roles);
     res.render("dashboard/roles", {
       activeTop: "roles",
       activeSide: "overview",
@@ -263,7 +263,7 @@ exports.postCreatedRole = [
       const { app_id, app_name } = req.body;
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        // console.log(error.array().map((err) => err.msg));
+        // // console.log(error.array().map((err) => err.msg));
         return res.render("dashboard/create-role", {
           activeTop: "roles",
           app_id,
@@ -286,11 +286,11 @@ exports.postCreatedRole = [
   async (req, res) => {
     try {
       const { app_id, role_name, description } = req.body;
-      console.log(req.body);
+      // console.log(req.body);
       const cookies = cookie.parse(req.headers.cookie || "");
 
       const accessToken = cookies.access_token;
-      // console.log("Access Token:", accessToken);
+      // // console.log("Access Token:", accessToken);
 
       const response = await fetch(`${backend_url}/api/AaaS/v1/role/create`, {
         method: "POST",
@@ -301,7 +301,7 @@ exports.postCreatedRole = [
         body: JSON.stringify({ app_id, name: role_name, description }),
       });
       if (!response.ok) {
-        console.log(response);
+        // console.log(response);
         return res.status(response.status).render("error/server-error", {
           errorCode: response.status,
           type: "error",
@@ -319,7 +319,7 @@ exports.postCreatedRole = [
 
       // On successful login, redirect to home or dashboard
       // const users = data?.data;
-      //   console.log(users);
+      //   // console.log(users);
       return res.redirect("/dashboard/roles");
     } catch (err) {
       return res.status(500).render("error/server-error", {
@@ -365,7 +365,7 @@ exports.postUpdatedRole = [
       const role = { name, description,role_id };
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        // console.log(error.array().map((err) => err.msg));
+        // // console.log(error.array().map((err) => err.msg));
         return res.render("dashboard/update-role", {
           activeTop: "roles",
             role,
@@ -390,7 +390,7 @@ exports.postUpdatedRole = [
          const cookies = cookie.parse(req.headers.cookie || "");
 
          const accessToken = cookies.access_token;
-         // console.log("Access Token:", accessToken);
+         // // console.log("Access Token:", accessToken);
 
          const response = await fetch(
            `${backend_url}/api/AaaS/v1/role/update`,
@@ -404,7 +404,7 @@ exports.postUpdatedRole = [
            }
          );
          if (!response.ok) {
-           console.log(response);
+           // console.log(response);
            return res.status(response.status).render("error/server-error", {
              errorCode: response.status,
              type: "error",
@@ -420,7 +420,7 @@ exports.postUpdatedRole = [
              message: "Service Unavailable. Please try again later.",
            });
          const roles = data?.data;
-         console.log(roles);
+         // console.log(roles);
             return res.redirect("/dashboard/roles");
     } catch (error) {
         return res.status(500).render("error/server-error", {
@@ -468,7 +468,7 @@ exports.postRemoveRole = async (req, res) => {
             });
 
         const roles = data?.data;
-        console.log(roles);
+        // console.log(roles);
         return res.redirect("/dashboard/roles");
     } catch (error) {
         return res.status(500).render("error/server-error", {
@@ -486,7 +486,7 @@ exports.postGetRolesByApp = async (req, res) => {
 
         const accessToken = cookies.access_token;
 
-        console.log(app_id);
+        // console.log(app_id);
         const response = await fetch(`${backend_url}/api/AaaS/v1/role/app`, {
           method: "POST",
           headers: {
@@ -513,7 +513,7 @@ exports.postGetRolesByApp = async (req, res) => {
           });
 
         const roles = data?.data;
-        // console.log(roles);
+        // // console.log(roles);
         return res.status(200).json( roles );
     } catch (error) {
         return res.status(500).render("error/server-error", {
@@ -531,7 +531,7 @@ exports.postAssignRole = async (req, res) => {
 
         const accessToken = cookies.access_token;
 
-        // console.log(app_id);
+        // // console.log(app_id);
         const response = await fetch(`${backend_url}/api/AaaS/v1/role/assign`, {
           method: "POST",
           headers: {
@@ -540,10 +540,10 @@ exports.postAssignRole = async (req, res) => {
           },
           body: JSON.stringify({ app_id,user_id,role_id }),
         });
-        console.log(response);
+        // console.log(response);
         if (!response.ok) {
           let data = await response.json();
-          console.log(data);
+          // console.log(data);
           return res.status(response.status).render("error/server-error", {
             errorCode: response.status,
             type: "error",
@@ -561,7 +561,7 @@ exports.postAssignRole = async (req, res) => {
 
         // const roles = data?.data;
 
-        // console.log(roles);
+        // // console.log(roles);
         return res.redirect("/dashboard/users");
     } catch (err) {
         return res.status(500).render("error/server-error", {
@@ -578,7 +578,7 @@ exports.getAssignRolePage = async (req, res) => {
 
     const accessToken = cookies.access_token;
 
-    // console.log(app_id);
+    // // console.log(app_id);
     const response = await fetch(`${backend_url}/api/AaaS/v1/role/assign/all`, {
       method: "GET",
       headers: {
@@ -586,10 +586,10 @@ exports.getAssignRolePage = async (req, res) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    console.log(response);
+    // console.log(response);
     if (!response.ok) {
       let data = await response.json();
-      console.log(data);
+      // console.log(data);
       return res.status(response.status).render("error/server-error", {
         errorCode: response.status,
         type: "error",
@@ -606,7 +606,7 @@ exports.getAssignRolePage = async (req, res) => {
       });
 
     const assignedUsers = data?.data;
-    // console.log(assignedUsers);
+    // // console.log(assignedUsers);
     return res.render("dashboard/assigned-role-use", {
       activeTop: "roles",
       activeSide: "overview",
@@ -629,7 +629,7 @@ exports.postRemoveAssignedRoles = async (req, res) => {
 
      const accessToken = cookies.access_token;
 
-     // console.log(app_id);
+     // // console.log(app_id);
      const response = await fetch(
        `${backend_url}/api/AaaS/v1/role/assign/delete`,
        {
@@ -641,10 +641,10 @@ exports.postRemoveAssignedRoles = async (req, res) => {
          body: JSON.stringify({ ur_id }),
        }
      );
-     console.log(response);
+     // console.log(response);
      if (!response.ok) {
        let data = await response.json();
-       console.log(data);
+       // console.log(data);
        return res.status(response.status).render("error/server-error", {
          errorCode: response.status,
          type: "error",
@@ -661,7 +661,7 @@ exports.postRemoveAssignedRoles = async (req, res) => {
     //    });
 
     //  const roles = data?.data;
-    //  console.log(roles);
+    //  // console.log(roles);
       return res.redirect("/dashboard/Roles/assign");
   } catch (err) {
     return res.status(500).render("error/server-error", {
@@ -678,7 +678,7 @@ exports.postUpdateAssignedRoles = async (req, res) => {
 
      const accessToken = cookies.access_token;
 
-     // console.log(app_id);
+     // // console.log(app_id);
      const response = await fetch(
        `${backend_url}/api/AaaS/v1/role/assign/update`,
        {
@@ -690,10 +690,10 @@ exports.postUpdateAssignedRoles = async (req, res) => {
          body: JSON.stringify({ ur_id, role_id }),
        }
      );
-     console.log(response);
+     // console.log(response);
      if (!response.ok) {
        let data = await response.json();
-       console.log(data);
+       // console.log(data);
        return res.status(response.status).render("error/server-error", {
          errorCode: response.status,
          type: "error",
@@ -710,7 +710,7 @@ exports.postUpdateAssignedRoles = async (req, res) => {
      //    });
 
      //  const roles = data?.data;
-     //  console.log(roles);
+     //  // console.log(roles);
      return res.redirect("/dashboard/Roles/assign");
   } catch (err) {
      return res.status(500).render("error/server-error", {

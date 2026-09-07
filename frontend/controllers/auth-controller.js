@@ -99,7 +99,7 @@ exports.postSignup = [
   },
   async (req, res) => {
     try {
-      console.log(req.body);
+      // console.log(req.body);
       const {
         firstName,
         lastName,
@@ -128,7 +128,7 @@ exports.postSignup = [
         }),
       });
       if (!response.ok) {
-        console.log(response);
+        // console.log(response);
         return res.status(response.status).render("signup", {
           title: "Signup",
           postData: req.body,
@@ -222,7 +222,7 @@ exports.postLogin = [
   },
   async (req, res) => {
     try {
-      console.log(req.body);
+      // console.log(req.body);
       const { email, password } = req.body;
 
       const response = await fetch(`${backend_url}/api/AaaS/v1/login`, {
@@ -233,7 +233,7 @@ exports.postLogin = [
         body: JSON.stringify({ email, password }),
       });
       if (!response.ok) {
-        console.log(response);
+        // console.log(response);
         return res.status(response.status).render("login", {
           title: "Login",
           postData: req.body,
@@ -252,7 +252,7 @@ exports.postLogin = [
 
       // On successful login, redirect to home or dashboard
       const tokens = data?.data;
-      console.log(tokens);
+      // console.log(tokens);
       const { access_token, refresh_token } = tokens.token;
 
       // set cookies
