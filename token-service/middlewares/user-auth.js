@@ -58,7 +58,7 @@ module.exports = async (req, res, next) => {
     }
 
     // update it leater
-    if (!decode || !decode.client_id) {
+    if (!decode || !decode.client_id || !decode.user_id || !decode.app_id) {
       return res
         .status(401)
         .json(new Response(401, null, "Invalid token payload"));

@@ -36,12 +36,12 @@ module.exports = async (req, res, next) => {
         .json(new Response(401, null, "Token expired or invalid"));
     }
 
-    if (!decode || !decode.email || !decode.client_id ||!decode.email) {
+    if (!decode || !decode.email || !decode.client_id) {
       return res
         .status(401)
         .json(new Response(401, null, "Invalid token payload"));
     }
-    console.log(decode)
+    //console.log(decode)
     req.head = decode;
     next();
   } catch (err) {
