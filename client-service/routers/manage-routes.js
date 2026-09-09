@@ -12,39 +12,39 @@ const auth = require("../middlewares/jwt-decoder");
 // Headers: client_id (inside req.head)
 // Body: { app_id }
 // Response: { url, token }
-router.post("/getUrlAndToken", auth, controller.getUrlAndToken);
+router.post("/getUrlAndToken", auth, controller.postUrlAndToken);
 
 // 🔹 Get all users
 // Method: GET
 // Headers: { Authorization: token }
-router.get("/user/all", auth, controller.getAllUser);
+// router.get("/user/all", auth, controller.getAllUser);
 
 // 🔹 Ban a user
 // Method: POST
 // Headers: { Authorization: token }
 //    const {user_id,app_id} = req.body
-router.post("/user/ban", auth, controller.banUser);
+// router.post("/user/ban", auth, controller.banUser);
 
 // 🔹 Unban a user
 // Method: POST
 // Headers: { Authorization: token }
 //    const {user_id,app_id} = req.body
-router.post("/user/unban", auth, controller.unbanUser);
+// router.post("/user/unban", auth, controller.unbanUser);
 
 // 🔹 Get all banned users
 // Method: GET
 // Headers: { Authorization: token }
-router.get("/user/banned", auth, controller.getBannedUser);
+// router.get("/user/banned", auth, controller.getBannedUser);
 
 // 🔹 Get all active users
 // Method: GET
 // Headers: { Authorization: token }
-router.get("/user/active", auth, controller.getActiveUser);
+// router.get("/user/active", auth, controller.getActiveUser);
 
 // 🔹 Get all inactive users
 // Method: GET
 // Headers: { Authorization: token }
-router.get("/user/inactive", auth, controller.getInactiveUser);
+// router.get("/user/inactive", auth, controller.getInactiveUser);
 
 // ====================== APP SECRET MANAGEMENT ======================
 
@@ -72,27 +72,27 @@ router.post("/app/get-secret", auth, controller.getSecret);
 // Headers: { Authorization: token }
 // head : {client_id}
 // Body: {  app_id, name, description }
-router.post("/role/create", auth, controller.postCreateRole);
+// router.post("/role/create", auth, controller.postCreateRole);
 
 // 🔹 Update existing role
 // Method: PUT
 // Headers: { Authorization: token }
 // Body: { role_id, name, description }
-router.put("/role/update", auth, controller.putUpdateRole);
+// router.put("/role/update", auth, controller.putUpdateRole);
 
 // 🔹 Delete role
 // Method: DELETE
 // Headers: { Authorization: token }
 // Body: { role_id }
-router.delete("/role/delete", auth, controller.deleteRole);
+// router.delete("/role/delete", auth, controller.deleteRole);
 
 // 🔹 Get all roles
 // Method: GET
 // Headers: { Authorization: token }
-router.get("/role/all", auth, controller.getRoles);
+// router.get("/role/all", auth, controller.getRoles);
 
 
-router.post("/role/app", auth, controller.getRolesByAppId);
+// router.post("/role/app", auth, controller.getRolesByAppId);
 
 // ====================== USER-ROLE ASSIGNMENT ======================
 
@@ -100,49 +100,49 @@ router.post("/role/app", auth, controller.getRolesByAppId);
 // Method: POST
 // Headers: { Authorization: token }
 // Body: { role_id, user_id, app_id }
-router.post("/role/assign", auth, controller.postAssinRole);
+// router.post("/role/assign", auth, controller.postAssinRole);
 
 // 🔹 Update assigned role for a user
 // Method: PUT
 // Headers: { Authorization: token }
 // Body: { role_id, ur_id }
-router.put("/role/assign/update", auth, controller.putUpdateAssinRole);
+// router.put("/role/assign/update", auth, controller.putUpdateAssinRole);
 
 // 🔹 Remove assigned role
 // Method: DELETE
 // Headers: { Authorization: token }
 // Body: { ur_id }
-router.post("/role/assign/delete", auth, controller.deleteAssinRole);
+// router.post("/role/assign/delete", auth, controller.deleteAssinRole);
 
 // 🔹 Get all users with assigned roles
 // Method: GET
 // Headers: { Authorization: token }
-router.get("/role/assign/all", auth, controller.getAlluserWithAssinRole);
+// router.get("/role/assign/all", auth, controller.getAlluserWithAssinRole);
 
 // 🔹 Get all users with assigned roles by app_id
 // Method: POST
 // Headers: { Authorization: token }
 // Body: { app_id }
-router.post(
-  "/role/assign/app",
-  auth,
-  controller.getAlluserWithAssinRoleByAppId
-);
+// router.post(
+  // "/role/assign/app",
+  // auth,
+  // controller.getAlluserWithAssinRoleByAppId
+// );
 
 // ====================== TOKEN SERVICE ======================
 
 // 🔹 Get users with token details
 // Method: GET
 // Headers: { Authorization: token }
-router.get("/token/user", auth, controller.getUserWithToken);
+// router.get("/token/user", auth, controller.getUserWithToken);
 
 // 🔹 Get tokens by app_id
 // Method: POST
 // Headers: { Authorization: token }
 // Body: { app_id }
-router.post("/token/app", auth, controller.getUserWithTokenByApp);
+// router.post("/token/app", auth, controller.getUserWithTokenByApp);
 
-router.post("/token/user/remove", auth, controller.postRemoveUserToken);
+// router.post("/token/user/remove", auth, controller.postRemoveUserToken);
 
 // 📘 Add new app
 // body: {app_name,description,secret}
@@ -160,7 +160,7 @@ router.get("/all", auth, controller.getApp);
 
 // 📘 Get app by ID
 // header :token
-router.get("/:appId", auth, controller.getAppById);
+// router.get("/:appId", auth, controller.getAppById);
 
 // 📘 Delete app
 // header : token

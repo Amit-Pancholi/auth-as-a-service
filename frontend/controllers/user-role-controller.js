@@ -10,7 +10,7 @@ exports.getUsers = async (req, res) => {
     const accessToken = cookies.access_token;
     // // console.log("Access Token:", accessToken);
 
-    const response = await fetch(`${backend_url}/api/AaaS/v1/user/all`, {
+    const response = await fetch(`${backend_url}/api/AaaS/user/v1?action=all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -59,7 +59,7 @@ exports.postBanUser = async (req, res) => {
     // // console.log("Access Token:", accessToken);
     const { user_id, app_id } = req.body;
     // // console.log(req.body);
-    const response = await fetch(`${backend_url}/api/AaaS/v1/user/ban`, {
+    const response = await fetch(`${backend_url}/api/AaaS/user/v1?action=ban`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -103,7 +103,7 @@ exports.getBannedUsers = async (req, res) => {
     const accessToken = cookies.access_token;
     // // console.log("Access Token:", accessToken);
 
-    const response = await fetch(`${backend_url}/api/AaaS/v1/user/banned`, {
+    const response = await fetch(`${backend_url}/api/AaaS/user/v1?action=banned`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -152,7 +152,7 @@ exports.postUnbanUser = async (req, res) => {
     // // console.log("Access Token:", accessToken);
     const { user_id, app_id } = req.body;
     // console.log(req.body);
-    const response = await fetch(`${backend_url}/api/AaaS/v1/user/unban`, {
+    const response = await fetch(`${backend_url}/api/AaaS/user/v1?action=unban`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -196,7 +196,7 @@ exports.getRoles = async (req, res) => {
     const accessToken = cookies.access_token;
     // // console.log("Access Token:", accessToken);
 
-    const response = await fetch(`${backend_url}/api/AaaS/v1/role/all`, {
+    const response = await fetch(`${backend_url}/api/AaaS/rbac/v1/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -292,13 +292,13 @@ exports.postCreatedRole = [
       const accessToken = cookies.access_token;
       // // console.log("Access Token:", accessToken);
 
-      const response = await fetch(`${backend_url}/api/AaaS/v1/role/create`, {
+      const response = await fetch(`${backend_url}/api/AaaS/rbac/v1/create/${app_id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ app_id, name: role_name, description }),
+        body: JSON.stringify({ name: role_name, description }),
       });
       if (!response.ok) {
         // console.log(response);
@@ -393,14 +393,14 @@ exports.postUpdatedRole = [
          // // console.log("Access Token:", accessToken);
 
          const response = await fetch(
-           `${backend_url}/api/AaaS/v1/role/update`,
+           `${backend_url}/api/AaaS/rbac/v1/update/${role_id}`,
            {
              method: "PUT",
              headers: {
                "Content-Type": "application/json",
                Authorization: `Bearer ${accessToken}`,
              },
-             body: JSON.stringify({ role_id, name, description }),
+             body: JSON.stringify({  name, description }),
            }
          );
          if (!response.ok) {
@@ -440,14 +440,13 @@ exports.postRemoveRole = async (req, res) => {
         const accessToken = cookies.access_token;
 
         const response = await fetch(
-            `${backend_url}/api/AaaS/v1/role/delete`,
+            `${backend_url}/api/AaaS/rbac/v1/delete/${role_id}`,
             {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({ role_id }),
             }
         );
 
@@ -487,13 +486,12 @@ exports.postGetRolesByApp = async (req, res) => {
         const accessToken = cookies.access_token;
 
         // console.log(app_id);
-        const response = await fetch(`${backend_url}/api/AaaS/v1/role/app`, {
-          method: "POST",
+        const response = await fetch(`${backend_url}/api/AaaS/rbac/v1/app/${app_id}`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ app_id }),
         });
 
         if (!response.ok) {
@@ -532,13 +530,13 @@ exports.postAssignRole = async (req, res) => {
         const accessToken = cookies.access_token;
 
         // // console.log(app_id);
-        const response = await fetch(`${backend_url}/api/AaaS/v1/role/assign`, {
+        const response = await fetch(`${backend_url}/api/AaaS/rbac/user/v1/add/${role_id}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ app_id,user_id,role_id }),
+          body: JSON.stringify({ app_id,user_id}),
         });
         // console.log(response);
         if (!response.ok) {
@@ -579,7 +577,7 @@ exports.getAssignRolePage = async (req, res) => {
     const accessToken = cookies.access_token;
 
     // // console.log(app_id);
-    const response = await fetch(`${backend_url}/api/AaaS/v1/role/assign/all`, {
+    const response = await fetch(`${backend_url}/api/AaaS/rbac/user/v1/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -631,14 +629,13 @@ exports.postRemoveAssignedRoles = async (req, res) => {
 
      // // console.log(app_id);
      const response = await fetch(
-       `${backend_url}/api/AaaS/v1/role/assign/delete`,
+       `${backend_url}/api/AaaS/rbac/user/v1/remove/${ur_id}`,
        {
-         method: "POST",
+         method: "DELETE",
          headers: {
            "Content-Type": "application/json",
            Authorization: `Bearer ${accessToken}`,
          },
-         body: JSON.stringify({ ur_id }),
        }
      );
      // console.log(response);
@@ -680,14 +677,14 @@ exports.postUpdateAssignedRoles = async (req, res) => {
 
      // // console.log(app_id);
      const response = await fetch(
-       `${backend_url}/api/AaaS/v1/role/assign/update`,
+       `${backend_url}/api/AaaS/rbac/user/v1/update/${role_id}`,
        {
          method: "PUT",
          headers: {
            "Content-Type": "application/json",
            Authorization: `Bearer ${accessToken}`,
          },
-         body: JSON.stringify({ ur_id, role_id }),
+         body: JSON.stringify({ ur_id }),
        }
      );
      // console.log(response);

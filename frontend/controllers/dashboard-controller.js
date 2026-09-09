@@ -448,7 +448,7 @@ exports.getTokens = async (req, res) => {
     const accessToken = cookies.access_token;
     // // // console.log("Access Token:", accessToken);
 
-    const response = await fetch(`${backend_url}/api/AaaS/v1/token/user`, {
+    const response = await fetch(`${backend_url}/api/AaaS/token/v1/user`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -500,14 +500,13 @@ exports.postForceLogout = async (req, res) => {
     // // // console.log("Access Token:", accessToken);
 
     const response = await fetch(
-      `${backend_url}/api/AaaS/v1/token/user/remove`,
+      `${backend_url}/api/AaaS/token/v1/by-client/${token_id}`,
       {
-        method: "POST",
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ token_id }),
       }
     );
     if (!response.ok) {

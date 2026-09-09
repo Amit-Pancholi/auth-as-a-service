@@ -13,8 +13,8 @@ router.post("/apps/delete/:appId", dashboardController.postDeleteApp);
 
 router.get("/tokens", dashboardController.getTokens);
 router.get("/settings", dashboardController.getSettings);
-router.post("/Settings/update",dashboardController.postUpdateSetting);
-router.post("/Tokens/force-logout",dashboardController.postForceLogout);
+router.post("/Settings/update",dashboardController.postUpdateSetting); // manage by auth router 
+router.post("/Tokens/force-logout",dashboardController.postForceLogout);  // manage by auth router
 // router.get("/dashboard/banned-users", dashboardController.getBannedUsers);
 // router.get("/dashboard/assign-role", dashboardController.getAssignRole);
 // router.get(
