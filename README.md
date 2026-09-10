@@ -197,6 +197,33 @@ npm run dev
 ```
 
 Open <http://localhost:3000>. The frontend uses the backend service at `BACKEND_URL`. 
+
+## Run on Linux with the Startup Script
+
+The repository includes `service-run.sh` for starting the services on a Linux system without Docker. The script must be run from the repository root and requires Node.js, npm, PostgreSQL, Nginx, and `sudo` access.
+
+Before running the script:
+
+1. Make sure PostgreSQL is running.
+2. Make sure the `postgres` user can connect using the database URL you will provide.
+3. Make sure Nginx is installed. The script copies `nginx/nginx.local.conf` to `/etc/nginx/nginx.conf`, so it requires permission to update the system Nginx configuration.
+
+Run:
+
+```sh
+cd auth-as-a-service
+chmod +x service-run.sh
+./service-run.sh
+```
+
+When prompted, enter a PostgreSQL connection URL, for example:
+
+```text
+postgresql://postgres:password@localhost:5432/auth_as_a_service
+```
+
+The script creates any missing `.env` files, installs dependencies, runs the Prisma migrations, reloads Nginx, and starts the client, user, token, RBAC, and frontend services. It does not overwrite existing `.env` files. The frontend is available at <http://localhost:3000>; backend requests are routed through the configured Nginx endpoint.
+
 ## Run With Docker Compose
 
 ### Requirements
