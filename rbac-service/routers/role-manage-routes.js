@@ -2,6 +2,15 @@ const express = require("express");
 const router = express.Router();
 const roleController = require("../controllers/role-manage-controller");
 const verifyClient = require('../middlewares/client-auth')
+
+router.get("/health", (req, res) => {
+  try {
+    return res.status(200).send("OK");
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Error");
+  }
+});
 // ======================== ROLE ROUTES ======================== //
 
 // Create a new role

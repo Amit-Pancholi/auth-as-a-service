@@ -5,7 +5,7 @@ const Response = require("../utils/response-handler.js");
 module.exports = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader.split(" ")[1];
+    const token = authHeader?.split(" ")[1];
 
     const { action } = req.query;
 

@@ -4,6 +4,15 @@ const verifiyClient = require("../middlewares/client-auth");
 const verifiyUser = require("../middlewares/user-auth");
 const tokenRout = express.Router();
 
+tokenRout.get("/health", (req, res) => {
+  try {
+    return res.status(200).send("OK");
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Error");
+  }
+});
+
 // =============== CREATE TOKEN ===============
 // User signup/login: no middleware (they don’t have token yet)
 tokenRout.post("/user", tokenController.postGenerateTokenForUser);

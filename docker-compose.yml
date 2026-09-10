@@ -13,8 +13,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -26,8 +24,6 @@ services:
     build: ./client-service
     env_file:
       - .env
-    ports:
-      - "${CLIENT_PORT}:${CLIENT_PORT}"
     environment:
       PORT: ${CLIENT_PORT}
       USER_SERVICE_URL: http://user-service:${USER_PORT}
@@ -50,8 +46,6 @@ services:
     build: ./user-service
     env_file:
       - .env
-    ports:
-      - "${USER_PORT}:${USER_PORT}"
     environment:
       PORT: ${USER_PORT}
       TOKEN_SERVICE_URL: http://token-service:${TOKEN_PORT}
@@ -70,8 +64,6 @@ services:
     build: ./token-service
     env_file:
       - .env
-    ports:
-      - "${TOKEN_PORT}:${TOKEN_PORT}"
     environment:
       PORT: ${TOKEN_PORT}
       USER_SERVICE_URL: http://user-service:${USER_PORT}
@@ -88,8 +80,6 @@ services:
     build: ./rbac-service
     env_file:
       - .env
-    ports:
-      - "${RBAC_PORT}:${RBAC_PORT}"
     environment:
       PORT: ${RBAC_PORT}
       USER_SERVICE_URL: http://user-service:${USER_PORT}
@@ -119,7 +109,17 @@ services:
       - user-service
       - token-service
       - rbac-service
-
+  # ---------------------------
+  # frontend service
+  # ---------------------------
+  nginx:
+    container_name: nginx-server
+    build: ./nginx
+    depends_on:
+      - client-service
+      - user-service
+      - token-service
+      - rbac-service
 networks:
   default:
     name: microservices-net
