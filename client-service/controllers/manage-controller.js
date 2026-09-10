@@ -28,7 +28,7 @@ exports.postUrlAndToken = async (req, res, next) => {
 
     return res.status(200).json(
       new Response(200, {
-        url: `${user_access_url||user_url}/api/AaaS/user/v1`,
+        url: `${user_access_url}/api/AaaS/user/v1`,
         token: token,
       })
     );
