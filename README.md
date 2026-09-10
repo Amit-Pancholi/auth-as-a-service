@@ -64,6 +64,7 @@ Important user-facing operations include `POST /signup/:token`, `POST /login/:to
 - Node.js 18 or newer
 - npm
 - PostgreSQL 15 or newer
+- Nginx
 
 Each backend service uses its own Prisma schema. You can use separate databases (`client_db`, `user_db`, `token_db`, and `rbac_db`) on the same PostgreSQL server, which is the recommended local setup.
 
@@ -159,13 +160,30 @@ cd rbac-service && npm run dev
 
 Use `npm start` instead of `npm run dev` for a normal Node.js process.
 
-### 5. Start the frontend
+### 5. Start Nginx
+
+The frontend and external client applications must access the backend through Nginx. Nginx configuration uses Compose service names, so use nginx.local.conf when running without Docker.
+
+Install Nginx using your operating system's package manager, then start it from the repository root:
+
+```sh
+nginx -t -c "$PWD/nginx/nginx.local.conf" -p "$PWD/nginx/"
+nginx -c "$PWD/nginx/nginx.local.conf" -p "$PWD/nginx/"
+```
+
+Stop it with:
+
+```sh
+nginx -c "$PWD/nginx/nginx.local.conf" -p "$PWD/nginx/" -s quit
+```
+
+### 6. Start the frontend
 
 Create `frontend/.env`:
 
 ```env
 PORT=3000
-BACKEND_URL=http://localhost:8000
+BACKEND_URL=http://localhost                         # according to nginx config
 SESSION_SECRET=replace-with-a-long-random-session-secret
 ```
 
